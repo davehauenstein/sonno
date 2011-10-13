@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @category Sonno
+ * @package  Test
+ * @author   Dave Hauenstein <davehauenstein@gmail.com>
+ * @author   Tharsan Bhuvanendran <me@tharsan.com>
+ */
+
+namespace Sonno\Test\Annotation;
+
+use Sonno\Annotation\HeaderParam;
+
+/**
+ * Class level documentation.
+ *
+ * @category Sonno
+ * @package  Test
+ */
+class HeaderParamTest extends \PHPUnit_Framework_TestCase
+{
+    public function testConstructorSettingAndGetters()
+    {
+        $params = array('valA', 'valB');
+        $param  = new HeaderParam($params);
+        $this->assertEquals($params, $param->getParams());
+    }
+}

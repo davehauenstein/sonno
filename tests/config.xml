@@ -1,0 +1,26 @@
+<phpunit bootstrap="./bootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         stopOnError="false"
+         stopOnFailure="false"
+         stopOnIncomplete="false"
+         stopOnSkipped="false"
+         syntaxCheck="false"
+         strict="false"
+         verbose="false">
+    <testsuites>
+        <testsuite name="Sonno Test Suite">
+            <directory>./Sonno</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">../src</directory>
+        </whitelist>
+    </filter>
+    <logging>
+        <log type="coverage-html" target="./log/report" charset="UTF-8" yui="true" highlight="true" />
+    </logging>
+</phpunit>
