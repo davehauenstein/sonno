@@ -9,19 +9,24 @@ specification.
 Plain-Old-PHP objects are configured with a set of annotations describing
 a set of Resources.
 
-```php
+``` php
 
-namespace Sonno\Hello\World;
+<?php
+
+namespace Sonno\Example\Resource;
 
 use Sonno\Http\Response\Response,
     Sonno\Annotation\Path,
     Sonno\Annotation\GET,
+    Sonno\Annotation\POST,
     Sonno\Annotation\Context,
     Sonno\Annotation\Produces,
-    Sonno\Annotation\PathParam;
+    Sonno\Annotation\Consumes,
+    Sonno\Annotation\PathParam,
+    Sonno\Example\Representation\User\Collection as UserCollection;
 
 /**
- * @Path("/hello")
+ * @Path("/")
  */
 class HelloResource
 {
@@ -32,25 +37,40 @@ class HelloResource
 
     /**
      * @GET
-     * @Path("/world")
-     * @Produces("{text/plain}")
+     * @Produces({"text/plain"})
      */
-    public function helloWorld()
+    public function getHelloWorld()
     {
-        return 'Hello World!';
+        return 'Hello ReSTful World!';
     }
 
     /**
      * @GET
-     * @Path("abc/{name}")
-     * @PathParam("name")
-     * @Produces("{text/plain}")
+     * @Path("/users")
+     * @Produces({"application/xml"})
      */
-    public function helloWorldName($name)
+    public function getUserCollection()
     {
-        return new Response(200, "Hello $name");
+        return new UserCollection('application/xml');
     }
-}```
+
+    /**
+     * @POST
+     * @Path("/users")
+     * @Consumes({"application/xml"})
+     */
+    public function saveUserXml()
+    {
+        // Retrieve the request body.
+        $data = $this->_request->getRequestBody();
+
+        // ... Do some processing of $data, then save it...
+
+        $response = new Response();
+        return $response->setCreated('http://example.sonno.dev/users/10');
+    }
+}
+```
 
 License
 -------
@@ -72,7 +92,8 @@ that implements Sonno\Annotation\Reader\ReaderInterface.
 Here's an example of how a Sonno application can be configured using Doctrine's
 annotation reader:
 
-```php
+``` php
+<?php
 
 use Sonno\Configuration\Driver\AnnotationDriver,
     Sonno\Annotation\Reader\DoctrineReader,
@@ -93,7 +114,6 @@ $resources = array(
 
 $driver = new AnnotationDriver($resources, $annotationReader);
 $config = $driver->parseConfig();
-
 ```
 
 Summary of Annotations
@@ -225,7 +245,7 @@ Summary of Annotations
 Contribution Guidelines
 -----------------------
 
-=== Coding Standard ===
+### Coding Standard ###
 
 We strictly adhere to the Zend Framework coding standard. Before pushing to the
 origin, you should run
@@ -233,7 +253,7 @@ origin, you should run
 `$ phpcs --standard=zend src`. All errors and warnings
 should be cleaned up before making a pull request.
 
-=== Add Test Cases ===
+### Add Test Cases ###
 
 We try to keep our Code Coverage high and our CRAP index low. Before submitting
 a pull request, run the PHPUnit test suite and ensure that all tests pass.
