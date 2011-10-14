@@ -34,7 +34,7 @@ abstract class ParameterContainer
      */
     public function __construct($params)
     {
-        if(isset($params['value'])) {
+        if (isset($params['value'])) {
             $params = $params['value'];
         }
         $this->_params = (array) $params;
