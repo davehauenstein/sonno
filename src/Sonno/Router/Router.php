@@ -18,8 +18,10 @@ use Sonno\Http\Request\RequestInterface,
     Sonno\Http\Exception\UnsupportedMediaTypeException;
 
 /**
- * An immutable class to represent a route and http method combination for a
- * particular class#method combination.
+ * Responsible for determing which route will satisfy an incoming HTTP request,
+ * the Router examines the routes in a PhRest\Configuration\Configuration object
+ * and delivers a subset of those routes by comparing to request path, request
+ * method and request content type.
  *
  * @category Sonno
  * @package  Sonno\Router
@@ -146,14 +148,19 @@ class Router
 
     /**
      * Determine if two URI paths match by comparing each path segment in turn
-     * and populating a map of variables in the template path to values from the
-     * concrete path.
+     * and populating a map of variables from the template path to values in
+     * the concrete path.
+     * Template variables are plain variable names (such as 'id') along with an
+     * optional Regular Expression constraint (preceded by a colon [:]).
+     * If a RegEx-constrained template variable's corresponding concrete path
+     * value does not match the relevant Regular Expression, the paths will fail
+     * to match.
      *
      * @param string $concrete The concrete path (no variables)
      * @param string $template The template path (optional variables)
      * @return boolean True if the paths match.
      */
-    private function matchPath($concrete, $template, &$pathParams)
+    protected function matchPath($concrete, $template, &$pathParams)
     {
         $concreteSegments = explode('/', trim($concrete, '/'));
         $templateSegments = explode('/', trim($template, '/'));
