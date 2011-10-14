@@ -192,7 +192,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
      *
      * @return void
      */
-    public function testNoProducersForAcceptableType()
+    public function testNotAcceptable()
     {
         $config  = $this->buildMockConfiguration(array(
             array(
@@ -327,6 +327,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('blue', $response->getContent());
+        $this->assertEquals('text/plain', $response->getHeader('Content-Type'));
     }
 
     /**
@@ -352,7 +353,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
             'GET',
             '/service/v1/test/camelCase',
             null,
-            new Variant('text/plain'),
+            new Variant(null, null, 'text/plain'),
             array('op' => 'upper')
         );
 
@@ -361,6 +362,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
+        $this->assertEquals('text/plain', $response->getHeader('Content-Type'));
     }
 
     /**

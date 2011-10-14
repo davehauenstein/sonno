@@ -184,7 +184,11 @@ class Application
 
         // object is a scalar value: construct a new Response
         if (is_scalar($result)) {
-            $response = new Response(200, $result);
+            $response = new Response(
+                200,
+                $result,
+                array('Content-Type' => $selectedVariant->getMediaType())
+            );
             $response->sendResponse();
             return $response;
 
@@ -198,7 +202,8 @@ class Application
         } else if ($result instanceof Renderable) {
             $response = new Response(
                 200,
-                $result->render($selectedVariant->getMediaType())
+                $result->render($selectedVariant->getMediaType()),
+                array('Content-Type' => $selectedVariant->getMediaType())
             );
 
             $response->sendResponse();
