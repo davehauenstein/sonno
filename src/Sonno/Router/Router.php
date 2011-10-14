@@ -79,9 +79,9 @@ class Router
      * @param array $pathParameters The set of Path parameters matched on the
      *                              incoming Request path.
      * @return array A collection of candidate Route objects.
-     * @throws \Sonno\Http\Exception\InvalidArgumentException
-     * @throws \Sonno\Http\Exception\NotFoundException
-     * @throws \Sonno\Http\Exception\MethodNotAllowedException
+     * @throws InvalidArgumentException
+     * @throws Sonno\Http\Exception\NotFoundException
+     * @throws Sonno\Http\Exception\MethodNotAllowedException
      */
     public function match(RequestInterface $request, &$pathParameters = array())
     {
