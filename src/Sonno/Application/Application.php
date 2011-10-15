@@ -159,7 +159,7 @@ class Application
         );
 
         // instantiate the selected resource class
-        $resource = $reflClass->newInstance();
+        $resource = $this->createResource($reflClass);
 
         // inject Context variables into the resource class instance
         foreach ($selectedRoute->getContexts() as $propertyName => $contextType) {
@@ -213,6 +213,19 @@ class Application
         } else {
             throw new MalformedResourceRepresentationException();
         }
+    }
+
+    /**
+     * Factory method for resource instance creation. Override it in subclass
+     * to enable custom creation logic, e.g. to use constructor with parameters, 
+     * DIC, etc
+     * 
+     * @param ReflectionClass $class
+     * @return object The instance of resource
+     */
+    protected function createResource(ReflectionClass $class)
+    {
+        return $class->newInstance();
     }
 
     /**
