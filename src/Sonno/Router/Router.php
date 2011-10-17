@@ -108,7 +108,7 @@ class Router
 
         // locate matching routes using the incoming request path
         foreach ($allRoutes as $route) {
-            if ($this->matchPath($requestPath, $route->getPath(), $params)) {
+            if ($this->_matchPath($requestPath, $route->getPath(), $params)) {
                 $pathParameters = $params;
                 $candidateRoutes[] = $route;
             }
@@ -160,7 +160,7 @@ class Router
      * @param string $template The template path (optional variables)
      * @return boolean True if the paths match.
      */
-    protected function matchPath($concrete, $template, &$pathParams)
+    protected function _matchPath($concrete, $template, &$pathParams)
     {
         $concreteSegments = explode('/', trim($concrete, '/'));
         $templateSegments = explode('/', trim($template, '/'));
