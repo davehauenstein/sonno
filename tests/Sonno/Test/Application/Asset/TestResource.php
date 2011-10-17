@@ -20,16 +20,22 @@ use Sonno\Http\Response\Response;
  */
 class TestResource
 {
-    protected $incomingRequest;
+    protected $_incomingRequest;
+    protected $_defaultResponseText;
+
+    public function __construct($arg0 = 'random response content')
+    {
+        $this->_defaultResponseText = $arg0;
+    }
 
     public function modifyString($str, $op)
     {
         if ('upper' == $op) {
-            return strtoupper($str) . '|' . $this->incomingRequest->getMethod();
+            return strtoupper($str) . '|' . $this->_incomingRequest->getMethod();
         } else if ('lower' == $op) {
-            return strtolower($str) . '|' . $this->incomingRequest->getMethod();
+            return strtolower($str) . '|' . $this->_incomingRequest->getMethod();
         } else {
-            return $str . '|' . $this->incomingRequest->getMethod();
+            return $str . '|' . $this->_incomingRequest->getMethod();
         }
     }
 
@@ -40,7 +46,7 @@ class TestResource
 
     public function randomResponse()
     {
-        return new Response(200, 'random response content');
+        return new Response(200, $this->_defaultResponseText);
     }
 
     public function getPolo($colour)

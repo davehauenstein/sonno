@@ -313,7 +313,8 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
                 'resourceMethodName' => 'getPolo',
                 'produces' => array('text/plain'),
                 'consumes' => array('text/plain'),
-                'contexts' => array())
+                'contexts' => array(),
+                'pathParams' => array('colour'))
         ), '/service/v1');
         $request = $this->buildMockRequest(
             'GET',
@@ -345,7 +346,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
                 'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
                 'resourceMethodName' => 'modifyString',
                 'produces'           => array('text/plain'),
-                'contexts'           => array('incomingRequest' => 'Request'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
                 'pathParams'         => array('str'),
                 'queryParams'        => array('op'))
         ), '/service/v1');
@@ -369,8 +370,8 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
      * Test that a cookie in the HTTP request is successfully passed to a
      * resource method call.
      *
-     * @return void
      * @todo
+     * @return void
      */
     public function testCookieParam()
     {
@@ -380,8 +381,8 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
      * Test that a cookie in the HTTP request is successfully passed to a
      * resource method call.
      *
-     * @return void
      * @todo
+     * @return void
      */
     public function testFormParam()
     {
@@ -391,8 +392,8 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
      * Test that a cookie in the HTTP request is successfully passed to a
      * resource method call.
      *
-     * @return void
      * @todo
+     * @return void
      */
     public function testHeaderParam()
     {
@@ -414,7 +415,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
                 'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
                 'resourceMethodName' => 'modifyString',
                 'produces'           => array('text/plain'),
-                'contexts'           => array('incomingRequest' => 'Request'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
                 'pathParams'         => array('str'),
                 'queryParams'        => array('op'))
         ), '/service/v1');
@@ -449,7 +450,7 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
                 'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
                 'resourceMethodName' => 'modifyString',
                 'produces'           => array('text/plain'),
-                'contexts'           => array('incomingRequest' => 'Request'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
                 'pathParams'         => array('str'),
                 'queryParams'        => array('op'))
         ), '/service/v1');
@@ -466,5 +467,41 @@ class ApplicationTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
+    }
+
+    /**
+     * Test a custom resource creator function.
+     *
+     * @return void
+     */
+    public function testCustomResourceInstantiator()
+    {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test/{str}',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'randomResponse',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array('str'),
+                'queryParams'        => array('op'))
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/test/camelCase',
+            null,
+            new Variant('text/plain'),
+            array('op' => 'upper')
+        );
+
+        $app = new Application($config);
+        $app->setResourceCreationFunction(function($className) {
+            return new $className('constructor argument 0');
+        });
+        $response = $app->run($request);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("constructor argument 0", $response->getContent());
     }
 }
