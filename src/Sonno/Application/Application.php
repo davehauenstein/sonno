@@ -19,6 +19,7 @@ use ReflectionClass,
     Sonno\Configuration\Route,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
+    Sonno\Http\Uri\UriInfo,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
     Sonno\Http\Exception\UnsupportedMediaTypeException,
@@ -40,38 +41,33 @@ class Application
     /**
      * Resource configuration data.
      *
-     * @var \Sonno\Configuration\Configuration
+     * @var Sonno\Configuration\Configuration
      */
     protected $_config;
 
     /**
+     * A function callback responsible for the instantiation of a resource
+     * class.
+     *
+     * @var callback
+     */
+    protected $_resourceCreationFunction;
+
+    /**
      * Construct a new Application.
      *
-     * @param \Sonno\Configuration\Configuration $config Resource
-     *        configuration data
+     * @param Sonno\Configuration\Configuration $config Resource
+     *                                                  configuration data.
      */
     public function __construct(Configuration $config)
     {
-        $this->_config = $config;
-    }
-
-    /**
-     * Setter for configuration object.
-     *
-     * @param  \Sonno\Configuration\Configuration $config
-     * @return \Sonno\Configuration\AnnotationDriver Implements fluent
-     *         interface.
-     */
-    public function setConfig(Configuration $config)
-    {
-        $this->_config = $config;
-        return $this;
+        $this->_config  = $config;
     }
 
     /**
      * Getter for configuration object.
      *
-     * @return \Sonno\Configuration\Configuration
+     * @return Sonno\Configuration\Configuration
      */
     public function getConfig()
     {
@@ -83,6 +79,23 @@ class Application
     }
 
     /**
+     * Setter for configuration object.
+     *
+     * @param  Sonno\Configuration\Configuration $config
+     * @return Sonno\Configuration\AnnotationDriver Implements fluent interface.
+     */
+    public function setConfig(Configuration $config)
+    {
+        $this->_config = $config;
+        return $this;
+    }
+
+    public function setResourceCreationFunction($resourceCreationFunction)
+    {
+        $this->_resourceCreationFunction = $resourceCreationFunction;
+    }
+
+    /**
      * Process an incoming request.
      * Determine the appropriate route for the request using a Router, and then
      * execute the resource method to obtain and return a result.
@@ -90,16 +103,11 @@ class Application
      * @param Sonno\Http\Request\RequestInterface $request The incoming request
      * @return Sonno\Http\Response\Response
      * @throws InvalidArgumentException
+     *
      * @see Sonno\Router\Router\Router
      */
     public function run(RequestInterface $request)
     {
-        if (null == $request) {
-            throw new InvalidArgumentException(
-                'Missing function argument: request'
-            );
-        }
-
         // attempt to find routes that match the current request
         $pathParams  = array();
         $router      = new Router($this->_config);
@@ -120,14 +128,14 @@ class Application
         }
 
         // construct a hash map of Variants based on Routes
-        $variantMap = array();
-        $variants   = array();
+        $variantMap = array(); // variant hash => <Sonno\Http\Variant>
+        $variants   = array(); // array<Sonno\Http\Variant>
         foreach ($routes as $route) {
             $routeProduces = $route->getProduces();
-            foreach ($routeProduces as $consumes) {
-                $variant = new Variant(null, null, $consumes);
-                $key = spl_object_hash($variant);
-                $variantMap[$key] = $route;
+            foreach ($routeProduces as $produces) {
+                $variant = new Variant(null, null, $produces);
+                $variantHash = spl_object_hash($variant);
+                $variantMap[$variantHash] = $route;
                 $variants[] = $variant;
             }
         }
@@ -142,45 +150,22 @@ class Application
         $selectedVariantHash = spl_object_hash($selectedVariant);
         $selectedRoute = $variantMap[$selectedVariantHash];
 
-        // obtain Reflection objects for the resource method selected
-        $reflClass = new ReflectionClass(
-            $selectedRoute->getResourceClassName()
-        );
-        $reflMethod = $reflClass->getMethod(
-            $selectedRoute->getResourceMethodName()
-        );
+        // maintain URI information for resource class context injection
+        $uriInfo = new UriInfo($this->_config, $request, $selectedRoute);
+        $uriInfo->setPathParameters($pathParams);
+        $uriInfo->setQueryParameters($request->getQueryParams());
 
-        // create a flat array of method call arguments
-        $resourceMethodArgs = $this->createArgumentList(
-            $reflMethod,
+        // execute the resource class method and obtain the result
+        $result = $this->_executeResource(
+            $selectedRoute->getResourceClassName(),
+            $selectedRoute->getResourceMethodName(),
             $selectedRoute,
-            $request,
-            $pathParams
+            $uriInfo,
+            array(
+                'Request' => $request,
+                'UriInfo' => $uriInfo,
+            )
         );
-
-        // instantiate the selected resource class
-        $resource = $reflClass->newInstance();
-
-        // inject Context variables into the resource class instance
-        foreach ($selectedRoute->getContexts() as $propertyName => $contextType) {
-            try {
-                $reflProperty = $reflClass->getProperty($propertyName);
-            } catch(\ReflectionException $e) {
-                continue;
-            }
-
-            $reflProperty->setAccessible(true);
-
-            switch ($contextType) {
-                case 'Request':
-                    $reflProperty->setValue($resource, $request);
-                    break;
-            }
-        }
-
-        // execute the selected resource method using the generated method
-        // arguments
-        $result = $reflMethod->invokeArgs($resource, $resourceMethodArgs);
 
         // object is a scalar value: construct a new Response
         if (is_scalar($result)) {
@@ -216,39 +201,93 @@ class Application
     }
 
     /**
-     * Examine a class method and reorder all route parameters into a flat
-     * integer-indexed array so that it can be passed as arguments to the class
-     * method call.
+     * Create an instance of a resource class, execute a class method and
+     * return the result.
      *
-     * @param ReflectionMethod $method The class method
-     * @param Sonno\Configuration\Route $route The route containing parameters
-     *      to be processed.
-     * @param Sonno\Request\RequestInterface $request The incoming request.
-     * @return array
-     * @todo Add support for cookie, header and form parameters.
+     * @param $className string The class name.
+     * @param $methodName string The class' method name.
+     * @param $route Sonno\Configuration\Route The matched route.
+     * @param $uriInfo Sonno\Http\Uri\UriInfo Information about the URI.
+     * @param $contextInjections array A map of context variables that can be
+     *                                 injected into the resource class prior to
+     *                                 execution.
+     * @return mixed
      */
-    protected function createArgumentList(
-        ReflectionMethod $method,
-        Route $route,
-        RequestInterface $request,
-        array $seedParams)
+    protected function _executeResource(
+        $className,
+        $methodName,
+        $route,
+        $uriInfo,
+        $contextInjections = array())
     {
-        $resourceMethodArgs = array();
+        // obtain Reflection objects for the resource method selected
+        $reflClass  = new ReflectionClass($className);
+        $reflMethod = $reflClass->getMethod($methodName);
 
-        $params = array_merge(
-            $seedParams,
-            $request->getQueryParams() // add Query params from the Request
-        );
+        // instantiate the selected resource class
+        $resource = $this->_createResourceInstance($className);
 
-        $methodParameters = $method->getParameters();
-        foreach ($methodParameters as $index => $reflParameter) {
-            $parameterName = $reflParameter->getName();
+        // construct a flat array of method arguments for the resource method
+        $pathParamValues     = $uriInfo->getPathParameters();
+        $queryParamValues    = $uriInfo->getQueryParameters();
+        $pathParams          = $route->getPathParams() ?: array();
+        $queryParams         = $route->getQueryParams() ?: array();
+        $resourceMethodArgs  = array();
 
-            if (isset($params[$parameterName])) {
-                $resourceMethodArgs[$index] = $params[$parameterName];
+        foreach ($reflMethod->getParameters() as $idx => $reflParam) {
+            $parameterName = $reflParam->getName();
+
+            // search for an argument value in the Path parameter collection
+            if (in_array($parameterName, $pathParams)
+                && isset($pathParamValues[$parameterName])
+            ) {
+                $resourceMethodArgs[$idx] = $pathParamValues[$parameterName];
+            }
+
+            // search for an argument value in the Query parameter collection
+            if (in_array($parameterName, $queryParams)
+                && isset($queryParamValues[$parameterName])
+            ) {
+                $resourceMethodArgs[$idx] = $queryParamValues[$parameterName];
             }
         }
 
-        return $resourceMethodArgs;
+        // inject Context variables into the resource class instance
+        foreach ($route->getContexts() as $propertyName => $contextType) {
+            try {
+                $reflProperty = $reflClass->getProperty($propertyName);
+            } catch(\ReflectionException $e) {
+                continue;
+            }
+
+            $reflProperty->setAccessible(true);
+
+            if (isset($contextInjections[$contextType])) {
+                $reflProperty->setValue(
+                    $resource,
+                    $contextInjections[$contextType]
+                );
+            }
+        }
+
+        // execute the selected resource method using the generated method
+        // arguments
+        return $reflMethod->invokeArgs($resource, $resourceMethodArgs);
+    }
+
+    /**
+     * Instantiate a named class, and return the instance.
+     * Uses the Application's custom resource creation function, if one is
+     * available.
+     * Otherwise, invokes the resource class' default constructor.
+     *
+     * @param $className string The name of the class to instantiate.
+     * @return object
+     */
+    protected function _createResourceInstance($className)
+    {
+        return is_callable($this->_resourceCreationFunction)
+            ? call_user_func($this->_resourceCreationFunction, $className)
+            : new $className;
     }
 }

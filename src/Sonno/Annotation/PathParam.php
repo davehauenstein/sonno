@@ -17,8 +17,7 @@ use Sonno\Annotation\ParameterContainer;
 /**
  * Binds the value of a URI template parameter or a path segment containing
  * the template parameter to a resource method parameter or resource class
- * field. The value is URL decoded. A default value can be specified using the
- * DefaultValue annotation.
+ * field. The value is URL decoded.
  *
  * @Annotation
  * @category Sonno
