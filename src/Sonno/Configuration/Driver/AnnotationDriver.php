@@ -191,7 +191,9 @@ class AnnotationDriver implements DriverInterface
                     $reader,
                     $params
                 );
-                $config->addRoute(new Route($params));
+                if(false !== $params) {
+                    $config->addRoute(new Route($params));
+                }
             }
         }
 
@@ -234,6 +236,8 @@ class AnnotationDriver implements DriverInterface
      * @param  \ReflectionMethod $method
      * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
      * @param  array $params Merge method parameters into this.
+     * @return array|boolean An array of method params or false if not an
+     *         executable resource method.
      * @todo   Add support for the following annotations:
      *            - Context
      *            - DefaultValue
@@ -244,6 +248,12 @@ class AnnotationDriver implements DriverInterface
         array $params = array()
     )
     {
+        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HttpMethod')) {
+            $params['httpMethod'] = (string) $annot;
+        } else {
+            return false;
+        }
+
         $params['resourceMethodName'] = $method->getName();
 
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Path')) {
@@ -256,9 +266,6 @@ class AnnotationDriver implements DriverInterface
         }
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Produces')) {
             $params['produces'] = $annot->getMediaTypes();
-        }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HttpMethod')) {
-            $params['httpMethod'] = (string) $annot;
         }
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\PathParam')) {
             $params['pathParams'] = $annot->getParams();
