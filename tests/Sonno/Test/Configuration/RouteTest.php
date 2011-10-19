@@ -34,16 +34,15 @@ class RouteTest extends \PHPUnit_Framework_TestCase
     
     public function testFormSetterAndGetter()
     {
-    	$route = new Route();
-    	$route->setFormParams(array(
-    			'test' => 'true'
-    			));
+    	$route = new Route(array(
+           'formParams' => array('test' => 'true'),
+        ));
     	$this->assertEquals(array('test'=>'true'), $route->getFormParams());
-    	
-    	$route->setFormParams(array(
-    			'notatest' => 'true'
-    			));
-    	$this->assertEquals(array('notatest'=>'true', $route->getFormParams()));
+
+    	$route = new Route(array(
+           'formParams' => array('notatest' => 'true'),
+        ));
+    	$this->assertEquals(array('notatest'=>'true'), $route->getFormParams());
     }
 
     public function testHttpMethodSetterAndGetter()
