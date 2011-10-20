@@ -86,6 +86,11 @@ class Router
      * @throws InvalidArgumentException
      * @throws Sonno\Http\Exception\NotFoundException
      * @throws Sonno\Http\Exception\MethodNotAllowedException
+     * @todo   When filteringer candidate routes by matching the incoming
+     *         media type, Sonno is ignoring any Content-Type parameters
+     *         including the charset. This should be resolved, otherwise there
+     *         will be unintended consequences while dealing with charsets and
+     *         other Content-Type parameters.
      */
     public function match(RequestInterface $request, &$pathParameters = array())
     {
@@ -136,6 +141,13 @@ class Router
         // filter candidate routes further by matching the incoming media type
         if (!empty($requestContentType)) {
             foreach ($candidateRoutes as $i => $route) {
+                if (($offset = strpos($requestContentType, ';')) !== false) {
+                    $requestContentType = substr(
+                        $requestContentType,
+                        0,
+                        $offset
+                    );
+                }
                 if (!in_array($requestContentType, $route->getConsumes())) {
                     unset($candidateRoutes[$i]);
                 }
