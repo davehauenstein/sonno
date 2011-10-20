@@ -172,9 +172,11 @@ class AnnotationDriver implements DriverInterface
             $classParams = $this->_extractClassParams($class, $reader);
 
             $properties = $class->getProperties();
+            $params = array();
             foreach ($properties as $property) {
                 // Class and property params don't overlap, just merge.
                 $params = array_merge(
+                    $params,
                     $classParams,
                     $this->_extractPropertyParams($property, $reader)
                 );
