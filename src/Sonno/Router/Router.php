@@ -15,7 +15,9 @@ namespace Sonno\Router;
 use Sonno\Http\Request\RequestInterface,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
-    Sonno\Http\Exception\UnsupportedMediaTypeException;
+    Sonno\Http\Exception\UnsupportedMediaTypeException,
+	Sonno\Configuration\Configuration,
+	\InvalidArgumentException;
 
 /**
  * Responsible for determing which route will satisfy an incoming HTTP request,
@@ -108,8 +110,9 @@ class Router
 
         // locate matching routes using the incoming request path
         foreach ($allRoutes as $route) {
-            if ($this->_matchPath($requestPath, $route->getPath(), $params)) {
-                $pathParameters = $params;
+        	$returnPath = $this->_matchPath($requestPath, $route->getPath());
+            if (!$returnPath) {
+                $pathParameters = $returnPath;
                 $candidateRoutes[] = $route;
             }
         }
@@ -158,9 +161,9 @@ class Router
      *
      * @param string $concrete The concrete path (no variables)
      * @param string $template The template path (optional variables)
-     * @return boolean True if the paths match.
+     * @return array|boolean false if the paths don't match.
      */
-    protected function _matchPath($concrete, $template, &$pathParams)
+    protected function _matchPath($concrete, $template)
     {
         $concreteSegments = explode('/', trim($concrete, '/'));
         $templateSegments = explode('/', trim($template, '/'));
@@ -197,7 +200,7 @@ class Router
             }
         }
 
-        return true;
+        return $pathParams;
     }
 }
 
