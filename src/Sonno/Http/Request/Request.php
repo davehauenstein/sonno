@@ -99,6 +99,13 @@ class Request implements RequestInterface
     public static $bodyStreamWrapper = 'php://input';
 
     /**
+     * Whether the request was made using a secure connection.
+     *
+     * @var boolean
+     */
+    protected $_secure;
+
+    /**
      * A key/value pairing of http request headers to their values.
      * All keys will be lower-case.
      *
@@ -198,6 +205,9 @@ class Request implements RequestInterface
                 $this->_headers[$name] = $val;
             }
         }
+
+        // set connection secure
+        $this->_secure = !empty($requestData['HTTPS']);
     }
 
     /**
@@ -290,6 +300,11 @@ class Request implements RequestInterface
         return isset($this->_queryParams[$param])
             ? $this->_queryParams[$param]
             : null;
+    }
+
+    public function isSecure()
+    {
+        return $this->_secure;
     }
 
     /**

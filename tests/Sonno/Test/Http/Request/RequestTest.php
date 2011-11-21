@@ -117,6 +117,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($request->getQueryParam('non-existent'));
     }
 
+    public function testIsSecure()
+    {
+        $requestData = array('HTTPS' => true);
+        $request     = new Request($requestData);
+        $this->assertEquals(true, $request->isSecure());
+    }
+
     public function testVariantWithHighestQScoreIsSelectedNoQSpecified()
     {
         $variant1 = $this->getMock('Sonno\Http\Variant');
