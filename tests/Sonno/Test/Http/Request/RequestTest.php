@@ -124,6 +124,13 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(true, $request->isSecure());
     }
 
+    public function testPortNumber()
+    {
+        $requestData = array('SERVER_PORT' => 31415);
+        $request     = new Request($requestData);
+        $this->assertEquals(31415, $request->getPort());
+    }
+
     public function testVariantWithHighestQScoreIsSelectedNoQSpecified()
     {
         $variant1 = $this->getMock('Sonno\Http\Variant');
