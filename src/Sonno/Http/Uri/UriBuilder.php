@@ -40,7 +40,9 @@ class UriBuilder
      */
     protected $_config;
 
-    public function __construct(Configuration $config, RequestInterface $request)
+    public function __construct(
+        Configuration $config,
+        RequestInterface $request)
     {
         $this->_uriComponents = array();
         $this->_config  = $config;
@@ -76,13 +78,19 @@ class UriBuilder
     /**
      * Set the URI scheme.
      *
-     * @param string $scheme the URI scheme, may contain URI template parameters.
-     *                       A null value will unset the URI scheme. 
+     * @param string $scheme the URI scheme, may contain URI template
+     *                       parameters.
+     *                       A null value will unset the URI scheme
      * @return Sonno\Http\Uri\UriBuilder
      */
     public function scheme($scheme)
     {
-        $this->_uriComponents['scheme'] = $scheme;
+        if (null == $scheme) {
+            unset($this->_uriComponents['scheme']);
+        } else {
+            $this->_uriComponents['scheme'] = $scheme;
+        }
+
         return $this;
     }
 
@@ -90,24 +98,34 @@ class UriBuilder
      * Set the URI host.
      *
      * @param string $host the URI host, may contain URI template parameters.
-     *                     A null value will unset the host component of the URI. 
+     *                     A null value will unset the host component of the URI
      * @return Sonno\Http\Uri\UriBuilder
      */
     public function host($host)
     {
-        $this->_uriComponents['host'] = $host;
+        if (null == $host) {
+            unset($this->_uriComponents['host']);
+        } else {
+            $this->_uriComponents['host'] = $host;
+        }
+
         return $this;
     }
 
     /**
      * Set the URI port.
      *
-     * @param int $port the URI port, a value of -1 will unset an explicit port.
+     * @param int $port the URI port, a value of -1 will unset an explicit port
      * @return Sonno\Http\Uri\UriBuilder
      */
     public function port($port)
     {
-        $this->_uriComponents['port'] = $port;
+        if (-1 == $port) {
+            unset($this->_uriComponents['port']);
+        } else {
+            $this->_uriComponents['port'] = $port;
+        }
+
         return $this;
     }
 
@@ -139,8 +157,8 @@ class UriBuilder
      */
     public function resourcePath(
         $resourceClassName,
-        $resourceMethodName = null
-    ) {
+        $resourceMethodName = null)
+    {
         return $this;
     }
 
@@ -150,9 +168,8 @@ class UriBuilder
      * multiple URI path segments.
      *
      * @param string $path the path, may contain URI template parameters.
-     *                     A null value will unset the path component of the URI.
+     *                     A null value will unset the path component of the URI
      * @return Sonno\Http\Uri\UriBuilder
-     * @todo Implement this
      */
     public function replacePath($path)
     {
@@ -179,13 +196,14 @@ class UriBuilder
      * Set the URI query string. This method will overwrite any existing query
      * parameters.
      *
-     * @param string $querystring the URI query string, may contain URI template
-     *                            parameters. A null value will remove all query
-     *                            parameters.
+     * @param string $query the URI query string, may contain URI template
+     *                      parameters. A null value will remove all query
+     *                      parameters
      * @return Sonno\Http\Uri\UriBuilder
      */
-    public function replaceQuery($querystring)
+    public function replaceQuery($query)
     {
+        parse_str($query, $this->_queryParams);
         return $this;
     }
 
@@ -199,7 +217,7 @@ class UriBuilder
      */
     public function fragment($fragment)
     {
-        $this->_uriComponents['port'] = $fragment;
+        $this->_uriComponents['fragment'] = $fragment;
         return $this;
     }
 
@@ -209,13 +227,79 @@ class UriBuilder
      *
      * @param array $values An ordered array of URI template parameter values.
      * @return string
+     * @throws LengthException if there are any URI template parameters without
+     *                         a supplied value
      */
     public function build(array $values = array())
     {
-        $uri = $this->_uriComponents['scheme'];
-        $uri .= '://';
+        $uri = $this->_concatUriComponents();
 
-        $uri .= $this->_uriComponents['host'];
+        // perform URI template value substitution
+        $countMatches = preg_match_all('/{([^}]*)}/', $uri, $matches);
+        if ($countMatches > count($values)) {
+            throw new LengthException(
+                sprintf(
+                    'Need %d URI template values, but only %d values supplied.',
+                    $countMatches,
+                    count($values)
+                )
+            );
+        } else if ($countMatches == count($values)) {
+            foreach ($matches[0] as $idx => $varName) {
+                $uri = str_replace($varName, $values[$idx], $uri);
+            }
+        }
+
+        return $uri;
+    }
+
+    /**
+     * Build a URI, any URI template parameters will be replaced by the value
+     * in the supplied map.
+     *
+     * @param array $values An associative array of URI template parameter
+     *                      values.
+     * @return string
+     * @throws LengthException if there are any URI template parameters without
+     *                         a supplied value
+     */
+    public function buildFromMap(array $values = array())
+    {
+        $uri = $this->_concatUriComponents();
+
+        // perform URI template value substitution
+        $countMatches = preg_match_all('/{([^}]*)}/', $uri, $matches);
+        if ($countMatches > count($values)) {
+            throw new LengthException(
+                sprintf(
+                    'Need %d URI template values, but only %d values supplied.',
+                    $countMatches,
+                    count($values)
+                )
+            );
+        } else if ($countMatches == count($values)) {
+            foreach ($matches[0] as $idx => $varName) {
+                $uri = str_replace($varName, $values[$matches[1][$idx]], $uri);
+            }
+        }
+
+        return $uri;
+    }
+
+    /**
+     * Concatenate all stored URI components into a single string URI.
+     *
+     * @return string
+     */
+    protected function _concatUriComponents()
+    {
+        if (isset($this->_uriComponents['scheme'])) {
+            $uri = $this->_uriComponents['scheme'] . '://';
+        }
+
+        if (isset($this->_uriComponents['host'])) {
+            $uri .= $this->_uriComponents['host'];
+        }
 
         // append the port number when required
         if (('http' == $this->_uriComponents['scheme'] &&
@@ -226,20 +310,19 @@ class UriBuilder
             $uri .= ':' . $this->_uriComponents['port'];
         }
 
-        $uri .= $this->_uriComponents['path'];
+        if (isset($this->_uriComponents['path'])) {
+            $uri .= $this->_uriComponents['path'];
+        }
+
+        if (count($this->_queryParams)) {
+            $uri .= '?' . http_build_query($this->_queryParams);
+        }
+
+        if (isset($this->_uriComponents['fragment'])) {
+            $uri .= '#' . $this->_uriComponents['fragment'];
+        }
 
         return $uri;
-    }
-
-    /**
-     * Build a URI, any URI template parameters will be replaced by the value
-     * in the supplied map.
-     *
-     * @param array $values An associative array of URI template parameter values.
-     * @return string
-     */
-    public function buildFromMap(array $values = array())
-    {
     }
 }
 

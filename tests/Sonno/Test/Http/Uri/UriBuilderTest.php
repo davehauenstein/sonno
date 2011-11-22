@@ -148,6 +148,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      * Test replacing the whole path with one derived from a class annotation.
      *
      * @return void
+     * @todo
      */
     public function testPathFromResourceClassAnnotation()
     {
@@ -158,6 +159,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      * annotation.
      *
      * @return void
+     * @todo
      */
     public function testPathFromResourceMethodAnnotation()
     {
@@ -170,6 +172,16 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testQueryParam()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->queryParam('homer', 'smrt')->build();
+
+        $this->assertEquals('http://example.com/test/example?homer=smrt', $uri);
     }
 
     /**
@@ -179,6 +191,16 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testReplaceQuery()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->queryParam('homer', 'smrt')->replaceQuery('homer=dumb')->build();
+
+        $this->assertEquals('http://example.com/test/example?homer=dumb', $uri);
     }
 
     /**
@@ -188,6 +210,58 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testFragment()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->fragment('stepone')->build();
+
+        $this->assertEquals('http://example.com/test/example#stepone', $uri);
+    }
+
+    /**
+     * Test building a URI containing template variables, by supplying a flat
+     * ordered array of values.
+     *
+     * @return void
+     */
+    public function testBuildWithSimpleArray()
+    {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $args    = array('one', 'two');
+        $uri     = $builder->path('/{arg1}/abc/{arg2}/def/')->build($args);
+
+        $this->assertEquals('http://example.com/test/example/one/abc/two/def', $uri);
+    }
+
+    /**
+     * Test building a URI containing template variables, by supplying an
+     * associative array of values.
+     *
+     * @return void
+     */
+    public function testBuildWithAssocArray()
+    {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $args    = array('arg1' => 'one', 'arg2' => 'two');
+        $uri     = $builder->path('/{arg1}/abc/{arg2}/def/')->buildFromMap($args);
+
+        $this->assertEquals('http://example.com/test/example/one/abc/two/def', $uri);
     }
 
     /**
