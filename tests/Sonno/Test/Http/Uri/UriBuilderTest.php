@@ -31,6 +31,22 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testScheme()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        // setup an additional expectation on the Request for a port number
+        $request
+            ->expects($this->any())
+            ->method('getPort')
+            ->will($this->returnValue(21));
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->scheme('ftp')->build();
+
+        $this->assertEquals('ftp://example.com/test/example', $uri);
     }
 
     /**
@@ -40,6 +56,16 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testHost()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->host('www.asciisauce.net')->build();
+
+        $this->assertEquals('http://www.asciisauce.net/test/example', $uri);
     }
 
     /**
@@ -49,15 +75,54 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testPort()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->port(31415)->build();
+
+        $this->assertEquals('http://example.com:31415/test/example', $uri);
     }
 
     /**
-     * Test setting a URI path.
+     * Test appending a single path segment to the URI path.
      *
      * @return void
      */
-    public function testPath()
+    public function testAppendingSingleSegmentToPath()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->path('monkey')->build();
+
+        $this->assertEquals('http://example.com/test/example/monkey', $uri);
+    }
+
+    /**
+     * Test appending multiple path segments to the URI path.
+     *
+     * @return void
+     */
+    public function testAppendingMultipleSegmentsToPath()
+    {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->path('/donkey/kong/')->build();
+
+        $this->assertEquals('http://example.com/test/example/donkey/kong', $uri);
     }
 
     /**
@@ -67,6 +132,16 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testReplacePath()
     {
+        $request = $this->buildMockRequest(
+            '/test/example',
+            array('Host' => 'example.com')
+        );
+        $config  = $this->buildMockConfiguration();
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->replacePath('/donkey/kong/')->build();
+
+        $this->assertEquals('http://example.com/donkey/kong', $uri);
     }
 
     /**
@@ -120,7 +195,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      *
      * @return Sonno\Http\Request\RequestInterface
      */
-    protected function buildMockRequest($uri, $headers)
+    protected function buildMockRequest($uri, $headers = array())
     {
         $request = $this
             ->getMockBuilder('Sonno\Http\Request\Request')
@@ -134,12 +209,10 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
                 ->will($this->returnValue($uri));
         }
 
-        if ($headers) {
-            $request
-                ->expects($this->any())
-                ->method('getHeaders')
-                ->will($this->returnValue($headers));
-        }
+        $request
+            ->expects($this->any())
+            ->method('getHeaders')
+            ->will($this->returnValue($headers));
 
         return $request;
     }

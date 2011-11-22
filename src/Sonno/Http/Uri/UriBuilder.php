@@ -35,25 +35,41 @@ class UriBuilder
      */
     protected $_queryParams;
 
+    /**
+     * @var Sonno\Configuration\Configuration
+     */
+    protected $_config;
+
     public function __construct(Configuration $config, RequestInterface $request)
     {
         $this->_uriComponents = array();
         $this->_config  = $config;
 
         $requestHeaders = $request->getHeaders();
+
         $this->scheme($request->isSecure() ? 'https' : 'http');
         if (isset($requestHeaders['Host'])) {
             $this->host($requestHeaders['Host']);
         }
-        $this->port($request->getPort());
+
+        // set the port number using the one from the Request, or the default
+        // for the request scheme
+        if ($request->getPort()) {
+            $this->port($request->getPort());
+        } else if ('http' == $this->_uriComponents['scheme']) {
+            $this->port(80);
+        } else if ('ftp' == $this->_uriComponents['scheme']) {
+            $this->port(21);
+        }
+
         $this->_queryParams = $request->getQueryParams();
 
         $requestUri = $request->getRequestUri();
         if (($hashOffset = strpos('#', $requestUri)) !== FALSE) {
-            $this->path(strstr($requestUri, '#', true));
+            $this->replacePath(strstr($requestUri, '#', true));
             $this->fragment(substr(strstr($requestUri, '#'), 1));
         } else {
-            $this->path($requestUri);
+            $this->replacePath($requestUri);
         }
     }
 
@@ -100,10 +116,14 @@ class UriBuilder
      *
      * @param string $path the path, may contain URI template parameters
      * @return Sonno\Http\Uri\UriBuilder
-     * @todo Implement this
      */
     public function path($path)
     {
+        $currentPath = $this->_uriComponents['path'];
+        $currentPath .= '/' . trim($path, '/');
+
+        $this->_uriComponents['path'] = $currentPath;
+
         return $this;
     }
 
@@ -125,9 +145,9 @@ class UriBuilder
     }
 
     /**
-     * Set the URI path. This method will overwrite any existing path and
-     * associated matrix parameters. Existing '/' characters are preserved thus
-     * a single value can represent multiple URI path segments.
+     * Set the URI path. This method will overwrite any existing path.
+     * Existing '/' characters are preserved thus a single value can represent
+     * multiple URI path segments.
      *
      * @param string $path the path, may contain URI template parameters.
      *                     A null value will unset the path component of the URI.
@@ -136,6 +156,7 @@ class UriBuilder
      */
     public function replacePath($path)
     {
+        $this->_uriComponents['path'] = '/' . trim($path, '/');
         return $this;
     }
 
@@ -191,6 +212,23 @@ class UriBuilder
      */
     public function build(array $values = array())
     {
+        $uri = $this->_uriComponents['scheme'];
+        $uri .= '://';
+
+        $uri .= $this->_uriComponents['host'];
+
+        // append the port number when required
+        if (('http' == $this->_uriComponents['scheme'] &&
+                80 != $this->_uriComponents['port']) ||
+            ('ftp' == $this->_uriComponents['scheme'] &&
+                21 != $this->_uriComponents['port'])
+        ) {
+            $uri .= ':' . $this->_uriComponents['port'];
+        }
+
+        $uri .= $this->_uriComponents['path'];
+
+        return $uri;
     }
 
     /**
