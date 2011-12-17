@@ -152,6 +152,28 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testPathFromResourceClassAnnotation()
     {
+        $request = $this->buildMockRequest(
+            '/test/example/',
+            array('Host' => 'example.com')
+        );
+
+        $routeOptions = array(
+            array(
+                'resourceClassName' => 'Sonno\Test\Http\Uri\Asset\TestResource',
+                'resourceClassMethod' => 'getEntity',
+                'path' => '/testresource/{id}',
+                'classPath' => '/testresource'
+            )
+        );
+        $config  = $this->buildMockConfiguration(
+            $routeOptions,
+            '/test/'
+        );
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->resourcePath('Sonno\Test\Http\Uri\Asset\TestResource')->build();
+
+        $this->assertEquals('http://example.com/test/example/testresource', $uri);
     }
 
     /**
@@ -163,6 +185,28 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testPathFromResourceMethodAnnotation()
     {
+        $request = $this->buildMockRequest(
+            '/test/example/',
+            array('Host' => 'example.com')
+        );
+
+        $routeOptions = array(
+            array(
+                'resourceClassName' => 'Sonno\Test\Http\Uri\Asset\TestResource',
+                'resourceClassMethod' => 'getEntity',
+                'path' => '/testresource/{id}',
+                'classPath' => '/testresource'
+            )
+        );
+        $config  = $this->buildMockConfiguration(
+            $routeOptions,
+            '/test/'
+        );
+
+        $builder = new UriBuilder($config, $request);
+        $uri     = $builder->resourcePath('Sonno\Test\Http\Uri\Asset\TestResource', 'getEntity')->build();
+
+        $this->assertEquals('http://example.com/test/example/testresource', $uri);
     }
 
     /**

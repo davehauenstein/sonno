@@ -87,10 +87,10 @@ class UriBuilder
     {
         if (null == $scheme) {
             unset($this->_uriComponents['scheme']);
-        } else {
-            $this->_uriComponents['scheme'] = $scheme;
+            return $this;
         }
 
+        $this->_uriComponents['scheme'] = $scheme;
         return $this;
     }
 
@@ -105,10 +105,10 @@ class UriBuilder
     {
         if (null == $host) {
             unset($this->_uriComponents['host']);
-        } else {
-            $this->_uriComponents['host'] = $host;
+            return $this;
         }
 
+        $this->_uriComponents['host'] = $host;
         return $this;
     }
 
@@ -122,10 +122,10 @@ class UriBuilder
     {
         if (-1 == $port) {
             unset($this->_uriComponents['port']);
-        } else {
-            $this->_uriComponents['port'] = $port;
+            return $this;
         }
 
+        $this->_uriComponents['port'] = $port;
         return $this;
     }
 
@@ -137,6 +137,10 @@ class UriBuilder
      */
     public function path($path)
     {
+        if (empty($path)) {
+            return $this;
+        }
+
         $currentPath = $this->_uriComponents['path'];
         $currentPath .= '/' . trim($path, '/');
 
@@ -173,6 +177,11 @@ class UriBuilder
      */
     public function replacePath($path)
     {
+        if (null == $path) {
+            unset($this->_uriComponents['path']);
+            return $this;
+        }
+
         $this->_uriComponents['path'] = '/' . trim($path, '/');
         return $this;
     }
@@ -203,6 +212,11 @@ class UriBuilder
      */
     public function replaceQuery($query)
     {
+        if (null == $query) {
+            $this->_queryParams = array();
+            return $this;
+        }
+
         parse_str($query, $this->_queryParams);
         return $this;
     }
@@ -217,6 +231,11 @@ class UriBuilder
      */
     public function fragment($fragment)
     {
+        if (null == $fragment) {
+            unset($this->_uriComponents['fragment']);
+            return $this;
+        }
+
         $this->_uriComponents['fragment'] = $fragment;
         return $this;
     }

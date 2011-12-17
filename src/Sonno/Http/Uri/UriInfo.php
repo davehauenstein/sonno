@@ -99,6 +99,8 @@ class UriInfo
      */
     public function getAbsolutePath()
     {
+        $builder = $this->getAbsolutePathBuilder();
+        return $builder->build();
     }
 
     /**
@@ -111,7 +113,12 @@ class UriInfo
      */
     public function getAbsolutePathBuilder()
     {
-        return null;
+        $builder = new UriBuilder($this->_request);
+        return $builder
+            ->scheme(null)
+            ->host(null)
+            ->port(null)
+            ->queryParams(null);
     }
 
     /**
