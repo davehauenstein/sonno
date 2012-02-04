@@ -397,7 +397,6 @@ class Route
      */
     protected function _setParams($params)
     {
-
         foreach ($params as $key => $val) {
             $prop  = '_' . $key;
             if (property_exists($this, $prop)) {
