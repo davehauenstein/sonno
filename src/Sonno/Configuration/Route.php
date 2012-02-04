@@ -47,14 +47,16 @@ class Route
     protected $_resourceMethodName;
 
     /**
-     * Path to match a class#method to (segment extracted from the class level).
+     * Path to match a class#method to
+     * (segment extracted from the class level).
      *
      * @var string
      */
     protected $_classPath;
 
     /**
-     * Path to match a class#method to (segment extracted from the method level).
+     * Path to match a class#method to
+     * (segment extracted from the method level).
      *
      * @var string
      */
