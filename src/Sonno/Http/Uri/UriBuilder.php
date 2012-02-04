@@ -163,6 +163,16 @@ class UriBuilder
         $resourceClassName,
         $resourceMethodName = null)
     {
+        foreach ($this->_config->getRoutes() as $route) {
+            if ($resourceClassName == $route->getResourceClassName()) {
+                $this->path($route->getClassPath());
+
+                if ($resourceMethodName == $route->getResourceMethodName()) {
+                    $this->path($route->getMethodPath());
+                }
+            }
+        }
+
         return $this;
     }
 
