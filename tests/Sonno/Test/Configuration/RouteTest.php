@@ -22,12 +22,14 @@ class RouteTest extends \PHPUnit_Framework_TestCase
     public function testPathSetterAndGetter()
     {
         $route = new Route(array(
-            'path' => 'some/base/path'
+            'classPath'  => 'some',
+            'methodPath' => '/base/path/'
         ));
         $this->assertEquals('/some/base/path', $route->getPath());
 
         $route = new Route(array(
-            'path' => '/some/other/base/path/'
+            'classPath'  => '/some/other/',
+            'methodPath' => 'base/path'
         ));
         $this->assertEquals('/some/other/base/path', $route->getPath());
     }

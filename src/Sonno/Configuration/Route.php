@@ -47,11 +47,18 @@ class Route
     protected $_resourceMethodName;
 
     /**
-     * Path to match a class#method to.
+     * Path to match a class#method to (segment extracted from the class level).
      *
      * @var string
      */
-    protected $_path;
+    protected $_classPath;
+
+    /**
+     * Path to match a class#method to (segment extracted from the method level).
+     *
+     * @var string
+     */
+    protected $_methodPath;
 
     /**
      * @see \Sonno\Annotation\HttpMethod
@@ -118,13 +125,33 @@ class Route
     }
 
     /**
-     * Getter for _path property.
+     * Getter for _classPath property.
      *
-     * @return string _path property.
+     * @return string _classPath property.
+     */
+    public function getClassPath()
+    {
+        return $this->_classPpath;
+    }
+
+    /**
+     * Getter for _methodPath property.
+     *
+     * @return string _methodPath property.
+     */
+    public function getMethodPath()
+    {
+        return $this->_methodPath;
+    }
+
+    /**
+     * Getter for the complete Path value.
+     *
+     * @return string The complete path.
      */
     public function getPath()
     {
-        return $this->_path;
+        return $this->_classPath . $this->_methodPath;
     }
 
     /**
@@ -238,15 +265,28 @@ class Route
     }
 
     /**
-     * Setter for _path property. Will trim trailing forward slash '/'
+     * Setter for _classPath property. Will trim trailing forward slash '/'
      * and ensure a forward slash '/' exists at the beginning of the string.
      *
      * @param $path string Value for $_path property.
      * @return \Sonno\Configuration\Route Implements fluent interface.
      */
-    protected function _setPath($path)
+    protected function _setClassPath($path)
     {
-        $this->_path = '/' . trim($path, '/');
+        $this->_classPath = '/' . trim($path, '/');
+        return $this;
+    }
+
+    /**
+     * Setter for _methodPath property. Will trim trailing forward slash '/'
+     * and ensure a forward slash '/' exists at the beginning of the string.
+     *
+     * @param $path string Value for $_path property.
+     * @return \Sonno\Configuration\Route Implements fluent interface.
+     */
+    protected function _setMethodPath($path)
+    {
+        $this->_methodPath = '/' . trim($path, '/');
         return $this;
     }
 
@@ -339,8 +379,8 @@ class Route
     /**
      * Setter for all properties. Supported params are:
      *
-     * - path
-     * - class
+     * - classPath
+     * - methodPath
      * - contexts
      * - method
      * - httpMethod
@@ -357,6 +397,7 @@ class Route
      */
     protected function _setParams($params)
     {
+
         foreach ($params as $key => $val) {
             $prop  = '_' . $key;
             if (property_exists($this, $prop)) {

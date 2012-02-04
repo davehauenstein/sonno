@@ -182,7 +182,6 @@ class AnnotationDriver implements DriverInterface
 
             $methods = $class->getMethods();
             foreach ($methods as $method) {
-                $params['path'] = $classParams['path'];
                 // Class and method params cannot just be merged because they
                 // overlap. Different rules apply to the ways these have to be
                 // merged and that's handled in _extractMethodParams.
@@ -222,7 +221,7 @@ class AnnotationDriver implements DriverInterface
 
         return array(
             'resourceClassName' => $class->getName(),
-            'path'              => $path->getPath(),
+            'classPath'         => $path->getPath(),
             'consumes'          => $consumes->getMediaTypes(),
             'produces'          => $produces->getMediaTypes(),
         );
@@ -247,9 +246,7 @@ class AnnotationDriver implements DriverInterface
         $params['resourceMethodName'] = $method->getName();
 
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Path')) {
-            $params['path'] = isset($params['path'])
-                ? $params['path'] . $annot->getPath()
-                : $annot->getPath();
+            $params['methodPath'] = $annot->getPath();
         }
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Consumes')) {
             $params['consumes'] = $annot->getMediaTypes();
