@@ -44,13 +44,6 @@ class UriInfo
     protected $_request;
 
     /**
-     * The matched route.
-     *
-     * @var Sonno\Configuration\Route
-     */
-    protected $_route;
-
-    /**
      * The request path parameter values.
      *
      * @var array
@@ -66,12 +59,10 @@ class UriInfo
 
     public function __construct(
         Configuration $config,
-        RequestInterface $request,
-        Route $route)
+        RequestInterface $request)
     {
         $this->_setConfiguration($config);
         $this->_setRequest($request);
-        $this->_route = $route;
     }
 
     /**
