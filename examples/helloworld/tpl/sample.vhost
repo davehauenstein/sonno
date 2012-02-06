@@ -1,7 +1,7 @@
 # Unless otherwise noted, replace all settings w/in curly braces with values
 # suited to your own environment.
 <VirtualHost *:80>
-    ServerName  example.sonno.dev
+    ServerName  helloworld.example.sonno.dev
     ServerAdmin {youraddress@you.com}
 
     DocumentRoot {your/path/to}/examples/helloworld/www
