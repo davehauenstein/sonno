@@ -50,8 +50,8 @@ class UriBuilder
         $requestHeaders = $request->getHeaders();
 
         $this->scheme($request->isSecure() ? 'https' : 'http');
-        if (isset($requestHeaders['Host'])) {
-            $this->host($requestHeaders['Host']);
+        if (isset($requestHeaders['host'])) {
+            $this->host($requestHeaders['host']);
         }
 
         // set the port number using the one from the Request, or the default
@@ -142,6 +142,12 @@ class UriBuilder
         }
 
         $currentPath = $this->_uriComponents['path'];
+
+        // reset the current path when it represents the root
+        if ($currentPath == '/') {
+            $currentPath = '';
+        }
+
         $currentPath .= '/' . trim($path, '/');
 
         $this->_uriComponents['path'] = $currentPath;

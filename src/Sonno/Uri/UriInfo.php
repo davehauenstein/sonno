@@ -102,8 +102,8 @@ class UriInfo
      */
     public function getAbsolutePathBuilder()
     {
-        $builder = new UriBuilder($this->_request);
-        return $builder->queryParams(null);
+        $builder = new UriBuilder($this->_config, $this->_request);
+        return $builder->replaceQuery(null);
     }
 
     /**
@@ -124,7 +124,7 @@ class UriInfo
      */
     public function getBaseUriBuilder()
     {
-        $builder = new UriBuilder($this->_request);
+        $builder = new UriBuilder($this->_config, $this->_request);
         return $builder->replacePath($this->_config->getBaseUri());
     }
 
@@ -168,7 +168,7 @@ class UriInfo
      */
     public function getRequestUriBuilder()
     {
-        $builder = new UriBuilder($this->_request);
+        $builder = new UriBuilder($this->_config, $this->_request);
         return $builder;
     }
 
