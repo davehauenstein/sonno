@@ -19,12 +19,12 @@ use ReflectionClass,
     Sonno\Configuration\Route,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
-    Sonno\Http\Uri\UriInfo,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
     Sonno\Http\Exception\UnsupportedMediaTypeException,
     Sonno\Http\Variant,
-    Sonno\Router\Router;
+    Sonno\Router\Router,
+    Sonno\Uri\UriInfo;
 
 /**
  * The entrypoint to Sonno for a PHP application, the Application class
@@ -182,8 +182,8 @@ class Application
             $result->sendResponse();
             return $result;
 
-        // object implements RenderableInterface: construct a Response using the
-        // reprsentation produced by render()
+        // object implements the Renderable interface: construct a Response
+        // using the reprsentation produced by render()
         } else if ($result instanceof Renderable) {
             $response = new Response(
                 200,
@@ -207,7 +207,7 @@ class Application
      * @param $className string The class name.
      * @param $methodName string The class' method name.
      * @param $route Sonno\Configuration\Route The matched route.
-     * @param $uriInfo Sonno\Http\Uri\UriInfo Information about the URI.
+     * @param $uriInfo Sonno\Uri\UriInfo Information about the URI.
      * @param $contextInjections array A map of context variables that can be
      *                                 injected into the resource class prior to
      *                                 execution.

@@ -99,6 +99,20 @@ class Request implements RequestInterface
     public static $bodyStreamWrapper = 'php://input';
 
     /**
+     * Whether the request was made using a secure connection.
+     *
+     * @var boolean
+     */
+    protected $_secure;
+
+    /**
+     * The port number used for the request. The default is 80.
+     *
+     * @var int
+     */
+    protected $_port;
+
+    /**
      * A key/value pairing of http request headers to their values.
      * All keys will be lower-case.
      *
@@ -179,6 +193,11 @@ class Request implements RequestInterface
         $this->_requestMethod = isset($requestData['REQUEST_METHOD'])
             ? $requestData['REQUEST_METHOD']
             : null;
+        $this->_port          = isset($requestData['SERVER_PORT'])
+            ? intval($requestData['SERVER_PORT'])
+            : 80;
+        $this->_secure        = isset($requestData['HTTPS'])
+            && !empty($requestData['HTTPS']);
         if (isset($requestData['QUERY_STRING'])) {
             parse_str($requestData['QUERY_STRING'], $this->_queryParams);
         }
@@ -198,6 +217,7 @@ class Request implements RequestInterface
                 $this->_headers[$name] = $val;
             }
         }
+
     }
 
     /**
@@ -290,6 +310,26 @@ class Request implements RequestInterface
         return isset($this->_queryParams[$param])
             ? $this->_queryParams[$param]
             : null;
+    }
+
+    /**
+     * Return whether or not this request uses a secure connection (https).
+     *
+     * @return boolean
+     */
+    public function isSecure()
+    {
+        return $this->_secure;
+    }
+
+    /**
+     * Return the port number used for the request.
+     *
+     * @return int
+     */
+    public function getPort()
+    {
+        return $this->_port;
     }
 
     /**

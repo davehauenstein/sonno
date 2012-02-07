@@ -2,7 +2,7 @@
 
 /**
  * @category  Sonno
- * @package   Sonno\Http\Uri
+ * @package   Sonno\Uri
  * @author    Dave Hauenstein <davehauenstein@gmail.com>
  * @author    Tharsan Bhuvanendran <me@tharsan.com>
  * @author    360i <sonno@360i.com>
@@ -10,7 +10,7 @@
  * @license   http://sonno.360i.com/LICENSE.txt New BSD License
  */
 
-namespace Sonno\Http\Uri;
+namespace Sonno\Uri;
 
 use Sonno\Configuration\Configuration,
     Sonno\Configuration\Route,
@@ -21,7 +21,7 @@ use Sonno\Configuration\Configuration,
  * information.
  *
  * @category Sonno
- * @package  Sonno\Http\Uri
+ * @package  Sonno\Uri
  * @author   Tharsan Bhuvanendran <me@tharsan.com>
  *
  * @todo JAX-RS implementation: getAbsolutePath()
@@ -44,13 +44,6 @@ class UriInfo
     protected $_request;
 
     /**
-     * The matched route.
-     *
-     * @var Sonno\Configuration\Route
-     */
-    protected $_route;
-
-    /**
      * The request path parameter values.
      *
      * @var array
@@ -66,12 +59,10 @@ class UriInfo
 
     public function __construct(
         Configuration $config,
-        RequestInterface $request,
-        Route $route)
+        RequestInterface $request)
     {
         $this->_setConfiguration($config);
         $this->_setRequest($request);
-        $this->_route = $route;
     }
 
     /**
@@ -94,11 +85,12 @@ class UriInfo
      * Get the absolute path of the request. This includes everything preceding
      * the path (host, port etc) but excludes query parameters.
      *
-     * @todo Build an absolute path (includes everything preceding the path)
      * @return string
      */
     public function getAbsolutePath()
     {
+        $builder = $this->getAbsolutePathBuilder();
+        return $builder->build();
     }
 
     /**
@@ -106,12 +98,12 @@ class UriInfo
      * includes everything preceding the path (host, port etc) but excludes
      * query parameters. 
      *
-     * @todo
-     * @return Sonno\Http\Uri\UriBuilder
+     * @return Sonno\Uri\UriBuilder
      */
     public function getAbsolutePathBuilder()
     {
-        return null;
+        $builder = new UriBuilder($this->_config, $this->_request);
+        return $builder->replaceQuery(null);
     }
 
     /**
@@ -128,22 +120,12 @@ class UriInfo
     /**
      * Get the base URI of the application in the form of a UriBuilder.
      *
-     * @todo
-     * @return Sonno\Http\Uri\UriBuilder
+     * @return Sonno\Uri\UriBuilder
      */
     public function getBaseUriBuilder()
     {
-        return null;
-    }
-
-    /**
-     * Get the path of the current request relative to the base URI as a string.
-     *
-     * @todo
-     * @return string
-     */
-    public function getPath()
-    {
+        $builder = new UriBuilder($this->_config, $this->_request);
+        return $builder->replacePath($this->_config->getBaseUri());
     }
 
     /**
@@ -174,18 +156,20 @@ class UriInfo
      */
     public function getRequestUri()
     {
-        return $this->_request->getRequestUri();
+        $builder = $this->getRequestUriBuilder();
+        return $builder->build();
     }
 
     /**
      * Get the absolute request URI in the form of a UriBuilder.
      *
      * @todo
-     * @return Sonno\Http\Uri\UriBuilder
+     * @return Sonno\Uri\UriBuilder
      */
     public function getRequestUriBuilder()
     {
-        return null;
+        $builder = new UriBuilder($this->_config, $this->_request);
+        return $builder;
     }
 
     /**

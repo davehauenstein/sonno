@@ -16,8 +16,8 @@ use Sonno\Http\Request\RequestInterface,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
     Sonno\Http\Exception\UnsupportedMediaTypeException,
-	Sonno\Configuration\Configuration,
-	InvalidArgumentException;
+    Sonno\Configuration\Configuration,
+    InvalidArgumentException;
 
 /**
  * Responsible for determing which route will satisfy an incoming HTTP request,
@@ -115,7 +115,7 @@ class Router
 
         // locate matching routes using the incoming request path
         foreach ($allRoutes as $route) {
-        	$returnPath = $this->_matchPath($requestPath, $route->getPath());
+            $returnPath = $this->_matchPath($requestPath, $route->getPath());
             if (false !== $returnPath) {
                 $pathParameters = $returnPath;
                 $candidateRoutes[] = $route;
