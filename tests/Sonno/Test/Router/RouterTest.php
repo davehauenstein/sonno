@@ -2,61 +2,25 @@
 
 /**
  * @category Sonno
- * @package  Test
+ * @package  Sonno\Test\Router
  * @author   Dave Hauenstein <davehauenstein@gmail.com>
  * @author   Tharsan Bhuvanendran <me@tharsan.com>
  */
 
-namespace Sonno\Test;
+namespace Sonno\Test\Router;
 
 use Sonno\Router\Router,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException;
 
 /**
- * Class level documentation.
+ * Test suite for the Sonno\Test\Router class.
  *
  * @category Sonno
- * @package  Test
+ * @package  Sonno\Test\Router
  */
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * Generate a mock \Sonno\Http\Request\RequestInterface object.
-     *
-     * @return \Sonno\Http\Request\RequestInterface
-     */
-    protected function buildMockRequest($method, $uri, $contentType = null)
-    {
-        $request = $this
-            ->getMockBuilder('Sonno\Http\Request\Request')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        if ($uri) {
-            $request
-                ->expects($this->any())
-                ->method('getRequestUri')
-                ->will($this->returnValue($uri));
-        }
-
-        if ($method) {
-            $request
-                ->expects($this->any())
-                ->method('getMethod')
-                ->will($this->returnValue($method));
-        }
-
-        if ($contentType) {
-            $request
-                ->expects($this->any())
-                ->method('getContentType')
-                ->will($this->returnValue($contentType));
-        }
-
-        return $request;
-    }
-
     /**
      * Test that when match() fails to locate a resource class to dispatch to,
      * it throws a NotFoundException.
@@ -354,5 +318,41 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $router = new Router($config);
 
         $matches = $router->match($request, $params);
+    }
+
+    /**
+     * Generate a mock \Sonno\Http\Request\RequestInterface object.
+     *
+     * @return \Sonno\Http\Request\RequestInterface
+     */
+    protected function buildMockRequest($method, $uri, $contentType = null)
+    {
+        $request = $this
+            ->getMockBuilder('Sonno\Http\Request\Request')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        if ($uri) {
+            $request
+                ->expects($this->any())
+                ->method('getRequestUri')
+                ->will($this->returnValue($uri));
+        }
+
+        if ($method) {
+            $request
+                ->expects($this->any())
+                ->method('getMethod')
+                ->will($this->returnValue($method));
+        }
+
+        if ($contentType) {
+            $request
+                ->expects($this->any())
+                ->method('getContentType')
+                ->will($this->returnValue($contentType));
+        }
+
+        return $request;
     }
 }

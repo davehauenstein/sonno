@@ -36,6 +36,7 @@ class Context
      */
     protected $_availableContexts = array(
         'Request',
+        'UriInfo',
     );
 
     /**

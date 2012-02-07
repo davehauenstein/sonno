@@ -1,11 +1,11 @@
 # Unless otherwise noted, replace all settings w/in curly braces with values
 # suited to your own environment.
 <VirtualHost *:80>
-    ServerName  helloworld.example.sonno.dev
+    ServerName  microframework.example.sonno.dev
     ServerAdmin {youraddress@you.com}
 
-    DocumentRoot {your/path/to}/examples/helloworld/www
-    <Directory {your/path/to}/examples/helloworld/www>
+    DocumentRoot {your/path/to}/examples/microframework/www
+    <Directory {your/path/to}/examples/microframework/www>
         Options Indexes FollowSymLinks MultiViews
         AllowOverride None
         Order allow,deny

@@ -1,0 +1,16 @@
+{% extends 'layout.twig' %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block body %}
+    <section>
+        <p>Send us a quick message using the form below!</p>
+        <form action="/contact" method="post">
+            <label>Full Name: <input type="text" name="fullname" /></label>
+            <br/>
+            <label>Message: <textarea cols="30" rows="10" name="message"></textarea></label>
+            <br/>
+            <input type="submit" value="Submit" />
+        </form>
+    </section>
+{% endblock %}

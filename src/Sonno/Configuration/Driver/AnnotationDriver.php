@@ -24,15 +24,17 @@ use Sonno\Configuration\Driver\DriverInterface,
 
 /**
  * A configuration driver used for generating
- * {@link \Sonno\Configuration\Configuration Configuration objects} based on
+ * {@link Sonno\Configuration\Configuration Configuration objects} based on
  * a defined set of classes marked up with Sonno Annotations.
  *
  * @category   Sonno
  * @package    Sonno\Configuration\Driver
  * @subpackage Configuration
  * @author     Dave Hauenstein <davehauenstein@gmail.com>
- * @see        \Sonno\Configuration\Driver\DriverInterface
- * @see        \Sonno\Configuration\Configuration
+ * @see        Sonno\Configuration\Driver\DriverInterface
+ * @see        Sonno\Configuration\Configuration
+ *
+ * @todo Cleanup the _extract* methods to eliminate phpcs line length warnings.
  */
 class AnnotationDriver implements DriverInterface
 {
@@ -62,7 +64,7 @@ class AnnotationDriver implements DriverInterface
      * Construct a new AnnotationDriver object.
      *
      * @param  array $classes List of classes that are annotated as Resources.
-     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
+     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
      */
     public function __construct(array $classes, ReaderInterface $reader = null)
     {
@@ -73,8 +75,8 @@ class AnnotationDriver implements DriverInterface
     /**
      * Setter for configuration object.
      *
-     * @param  \Sonno\Configuration\Configuration $config
-     * @return \Sonno\Configuration\AnnotationDriver Implements fluent
+     * @param  Sonno\Configuration\Configuration $config
+     * @return Sonno\Configuration\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setConfig(Configuration $config)
@@ -86,7 +88,7 @@ class AnnotationDriver implements DriverInterface
     /**
      * Getter for configuration object.
      *
-     * @return \Sonno\Configuration\Configuration
+     * @return Sonno\Configuration\Configuration
      */
     public function getConfig()
     {
@@ -99,8 +101,8 @@ class AnnotationDriver implements DriverInterface
     /**
      * Setter for annotation reader object.
      *
-     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
-     * @return \Sonno\Configuration\AnnotationDriver Implements fluent
+     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
+     * @return Sonno\Configuration\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setReader(ReaderInterface $reader)
@@ -112,7 +114,7 @@ class AnnotationDriver implements DriverInterface
     /**
      * Getter for annotation reader object.
      *
-     * @return \Sonno\Annotation\Reader\ReaderInterface
+     * @return Sonno\Annotation\Reader\ReaderInterface
      */
     public function getReader()
     {
@@ -124,7 +126,7 @@ class AnnotationDriver implements DriverInterface
      *
      * @param  $classes array An array of fully qualified class names which are
      *         annotated with Sonno annotations.
-     * @return \Sonno\Configuration\Driver\AnnotationDriver Implements a
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements a
      *         fluent interface.
      */
     public function setAnnotatedResources(array $classes)
@@ -148,12 +150,12 @@ class AnnotationDriver implements DriverInterface
      * A method that must be implemented by all config drivers that is used
      * to generate a Configuration object by parsing some type of configuration
      * (YAML, XML, Annotations, etc..). It must return a 
-     * {@link \Sonno\Configuration\Configuration Configuration} instance.
+     * {@link Sonno\Configuration\Configuration Configuration} instance.
      *
-     * @return \Sonno\Configuration\Configuration
-     * @throws \Sonno\Configuration\Driver\DriverException If no annotation
+     * @return Sonno\Configuration\Configuration
+     * @throws Sonno\Configuration\Driver\DriverException If no annotation
      *         reader object is set.
-     * @see    \Sonno\Configuration\Driver\DriverInterface
+     * @see    Sonno\Configuration\Driver\DriverInterface
      */
     public function parseConfig()
     {
@@ -169,7 +171,7 @@ class AnnotationDriver implements DriverInterface
 
         foreach ($resources as $resourceClass) {
             $class       = new ReflectionClass($resourceClass);
-            $classParams = $this->_extractClassParams($class, $reader);
+            $params      = $this->_extractClassParams($class, $reader);
 
             $properties = $class->getProperties();
             $params = array();
@@ -177,21 +179,16 @@ class AnnotationDriver implements DriverInterface
                 // Class and property params don't overlap, just merge.
                 $params = array_merge(
                     $params,
-                    $classParams,
                     $this->_extractPropertyParams($property, $reader)
                 );
             }
 
             $methods = $class->getMethods();
             foreach ($methods as $method) {
-                $params['path'] = $classParams['path'];
-                // Class and method params cannot just be merged because they
-                // overlap. Different rules apply to the ways these have to be
-                // merged and that's handled in _extractMethodParams.
-                $params = $this->_extractMethodParams(
-                    $method,
-                    $reader,
-                    $params
+                // Class and method params don't overlap either, just merge.
+                $params = array_merge(
+                    $params,
+                    $this->_extractMethodParams($method, $reader)
                 );
                 if(false !== $params) {
                     $config->addRoute(new Route($params));
@@ -205,8 +202,8 @@ class AnnotationDriver implements DriverInterface
     /**
      * Return a list of Route parameters based on class annotations.
      *
-     * @param  \ReflectionClass $class
-     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
+     * @param  ReflectionClass $class
+     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
      * @return array Class annotations.
      */
     protected function _extractClassParams(
@@ -214,54 +211,43 @@ class AnnotationDriver implements DriverInterface
         ReaderInterface $reader
     )
     {
-        if (!($path = $reader->getClassAnnotation($class, '\Sonno\Annotation\Path'))) {
-            $path = new \Sonno\Annotation\Path('');
+        $params = array('resourceClassName' => $class->getName());
+
+        if ($annot = $reader->getClassAnnotation($class, '\Sonno\Annotation\Path')) {
+            $params['classPath'] = $annot->getPath();
         }
-        if (!($consumes = $reader->getClassAnnotation($class, '\Sonno\Annotation\Consumes'))) {
-            $consumes = new \Sonno\Annotation\Consumes();
+        if ($annot = $reader->getClassAnnotation($class, '\Sonno\Annotation\Consumes')) {
+            $params['consumes'] = $annot->getMediaTypes();
         }
-        if (!($produces = $reader->getClassAnnotation($class, '\Sonno\Annotation\Produces'))) {
-            $produces = new \Sonno\Annotation\Produces();
+        if ($annot = $reader->getClassAnnotation($class, '\Sonno\Annotation\Produces')) {
+            $params['produces'] = $annot->getMediaTypes();
         }
 
-        return array(
-            'resourceClassName' => $class->getName(),
-            'path'              => $path->getPath(),
-            'consumes'          => $consumes->getMediaTypes(),
-            'produces'          => $produces->getMediaTypes(),
-        );
+        return $params;
     }
 
     /**
      * Return a list of Route parameters based on method annotations.
      *
-     * @param  \ReflectionMethod $method
-     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
-     * @param  array $params Merge method parameters into this.
-     * @return array|boolean An array of method params or false if not an
-     *         executable resource method.
-     * @todo   Add support for the following annotations:
-     *            - Context
-     *            - DefaultValue
+     * @param  ReflectionMethod $method
+     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
+     * @return array Method annotations.
      */
     protected function _extractMethodParams(
         ReflectionMethod $method,
-        ReaderInterface $reader,
-        array $params = array()
+        ReaderInterface $reader
     )
     {
+        $params = array('resourceMethodName' => $method->getName());
+
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HttpMethod')) {
             $params['httpMethod'] = (string) $annot;
         } else {
             return false;
         }
 
-        $params['resourceMethodName'] = $method->getName();
-
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Path')) {
-            $params['path'] = isset($params['path'])
-                ? $params['path'] . $annot->getPath()
-                : $annot->getPath();
+            $params['methodPath'] = $annot->getPath();
         }
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Consumes')) {
             $params['consumes'] = $annot->getMediaTypes();
@@ -291,8 +277,9 @@ class AnnotationDriver implements DriverInterface
     /**
      * Return a list of Route parameters based on property annotations.
      *
-     * @param  \ReflectionProperty $property
-     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
+     * @param ReflectionProperty $property
+     * @param Sonno\Annotation\Reader\ReaderInterface $reader
+     * @return array Property annotations.
      */
     public function _extractPropertyParams(
         ReflectionProperty $property,
