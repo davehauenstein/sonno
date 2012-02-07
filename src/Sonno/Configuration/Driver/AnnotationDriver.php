@@ -174,6 +174,7 @@ class AnnotationDriver implements DriverInterface
             $params      = $this->_extractClassParams($class, $reader);
 
             $properties = $class->getProperties();
+            $params = array();
             foreach ($properties as $property) {
                 // Class and property params don't overlap, just merge.
                 $params = array_merge(
@@ -189,7 +190,9 @@ class AnnotationDriver implements DriverInterface
                     $params,
                     $this->_extractMethodParams($method, $reader)
                 );
-                $config->addRoute(new Route($params));
+                if(false !== $params) {
+                    $config->addRoute(new Route($params));
+                }
             }
         }
 
@@ -237,6 +240,12 @@ class AnnotationDriver implements DriverInterface
     {
         $params = array('resourceMethodName' => $method->getName());
 
+        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HttpMethod')) {
+            $params['httpMethod'] = (string) $annot;
+        } else {
+            return false;
+        }
+
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Path')) {
             $params['methodPath'] = $annot->getPath();
         }
@@ -245,9 +254,6 @@ class AnnotationDriver implements DriverInterface
         }
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Produces')) {
             $params['produces'] = $annot->getMediaTypes();
-        }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HttpMethod')) {
-            $params['httpMethod'] = (string) $annot;
         }
         if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\PathParam')) {
             $params['pathParams'] = $annot->getParams();

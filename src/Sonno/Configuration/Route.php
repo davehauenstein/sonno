@@ -338,7 +338,7 @@ class Route
      */
     protected function _setFormParams(array $formParams)
     {
-        $this->_pathParams = $pathParams;
+        $this->_formParams = $formParams;
         return $this;
     }
 

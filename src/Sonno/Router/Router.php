@@ -15,7 +15,9 @@ namespace Sonno\Router;
 use Sonno\Http\Request\RequestInterface,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
-    Sonno\Http\Exception\UnsupportedMediaTypeException;
+    Sonno\Http\Exception\UnsupportedMediaTypeException,
+	Sonno\Configuration\Configuration,
+	InvalidArgumentException;
 
 /**
  * Responsible for determing which route will satisfy an incoming HTTP request,
@@ -84,6 +86,11 @@ class Router
      * @throws InvalidArgumentException
      * @throws Sonno\Http\Exception\NotFoundException
      * @throws Sonno\Http\Exception\MethodNotAllowedException
+     * @todo   When filteringer candidate routes by matching the incoming
+     *         media type, Sonno is ignoring any Content-Type parameters
+     *         including the charset. This should be resolved, otherwise there
+     *         will be unintended consequences while dealing with charsets and
+     *         other Content-Type parameters.
      */
     public function match(RequestInterface $request, &$pathParameters = array())
     {
@@ -108,8 +115,9 @@ class Router
 
         // locate matching routes using the incoming request path
         foreach ($allRoutes as $route) {
-            if ($this->_matchPath($requestPath, $route->getPath(), $params)) {
-                $pathParameters = $params;
+        	$returnPath = $this->_matchPath($requestPath, $route->getPath());
+            if (false !== $returnPath) {
+                $pathParameters = $returnPath;
                 $candidateRoutes[] = $route;
             }
         }
@@ -133,6 +141,13 @@ class Router
         // filter candidate routes further by matching the incoming media type
         if (!empty($requestContentType)) {
             foreach ($candidateRoutes as $i => $route) {
+                if (($offset = strpos($requestContentType, ';')) !== false) {
+                    $requestContentType = substr(
+                        $requestContentType,
+                        0,
+                        $offset
+                    );
+                }
                 if (!in_array($requestContentType, $route->getConsumes())) {
                     unset($candidateRoutes[$i]);
                 }
@@ -158,9 +173,9 @@ class Router
      *
      * @param string $concrete The concrete path (no variables)
      * @param string $template The template path (optional variables)
-     * @return boolean True if the paths match.
+     * @return array|boolean false if the paths don't match.
      */
-    protected function _matchPath($concrete, $template, &$pathParams)
+    protected function _matchPath($concrete, $template)
     {
         $concreteSegments = explode('/', trim($concrete, '/'));
         $templateSegments = explode('/', trim($template, '/'));
@@ -197,7 +212,7 @@ class Router
             }
         }
 
-        return true;
+        return $pathParams;
     }
 }
 

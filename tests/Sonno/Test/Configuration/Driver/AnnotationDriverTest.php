@@ -102,10 +102,10 @@ class AnnotationDriverTest extends \PHPUnit_Framework_TestCase
             ->expects($this->exactly(9))
             ->method('getMethodAnnotation')
             ->will($this->onConsecutiveCalls(
+                $httpMethodAnnotation,
                 $pathAnnotation,
                 null,
                 $producesAnnotation,
-                $httpMethodAnnotation,
                 $pathParamAnnotation,
                 null,
                 null,

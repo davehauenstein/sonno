@@ -33,6 +33,19 @@ class RouteTest extends \PHPUnit_Framework_TestCase
         ));
         $this->assertEquals('/some/other/base/path', $route->getPath());
     }
+    
+    public function testFormSetterAndGetter()
+    {
+    	$route = new Route(array(
+           'formParams' => array('test' => 'true'),
+        ));
+    	$this->assertEquals(array('test'=>'true'), $route->getFormParams());
+
+    	$route = new Route(array(
+           'formParams' => array('notatest' => 'true'),
+        ));
+    	$this->assertEquals(array('notatest'=>'true'), $route->getFormParams());
+    }
 
     public function testHttpMethodSetterAndGetter()
     {
