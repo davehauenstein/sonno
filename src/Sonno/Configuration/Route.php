@@ -133,7 +133,7 @@ class Route
      */
     public function getClassPath()
     {
-        return $this->_classPpath;
+        return $this->_classPath;
     }
 
     /**
