@@ -33,7 +33,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -54,11 +54,11 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
      *
      * @return void
      */
-    public function testHost()
+    public function testhost()
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -77,7 +77,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -96,7 +96,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -115,7 +115,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -134,7 +134,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -154,7 +154,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example/',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
 
         $routeOptions = array(
@@ -187,7 +187,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example/',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
 
         $routeOptions = array(
@@ -218,7 +218,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -237,7 +237,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -256,7 +256,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -276,7 +276,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
@@ -297,7 +297,7 @@ class UriBuilderTest extends \PHPUnit_Framework_TestCase
     {
         $request = $this->buildMockRequest(
             '/test/example',
-            array('Host' => 'example.com')
+            array('host' => 'example.com')
         );
         $config  = $this->buildMockConfiguration();
 
