@@ -27,8 +27,9 @@ use Sonno\Http\Response\Response,
     Sonno\Annotation\Consumes,
     Sonno\Annotation\PathParam,
     Twig_Autoloader,
-    Twig_Loader_Filesystem,
-    Twig_Environment;
+    Twig_Environment,
+    Twig_Function_Function,
+    Twig_Loader_Filesystem;
 
 class RootResource
 {
@@ -38,6 +39,11 @@ class RootResource
      * @Context("Request")
      */
     protected $_request;
+
+    /**
+     * @Context("UriInfo")
+     */
+    protected $_uriInfo;
 
     /**
      * The Twig Environment used for generating views.
@@ -63,10 +69,24 @@ class RootResource
      *
      * @GET
      * @Path("/")
+     * @Produces({"text/html"})
      */
-    public function get()
+    public function home()
     {
-        $tpl = $this->_twig->loadTemplate('main.twig.html');
+        $tpl = $this->_twig->loadTemplate('home.twig');
+        return $tpl->render(array());
+    }
+
+    /**
+     * About page.
+     *
+     * @GET
+     * @Path("/about")
+     * @Produces({"text/html"})
+     */
+    public function about()
+    {
+        $tpl = $this->_twig->loadTemplate('about.twig');
         return $tpl->render(array());
     }
 
@@ -75,10 +95,28 @@ class RootResource
      *
      * @GET
      * @Path("/contact")
+     * @Produces({"text/html"})
      */
     public function contact()
     {
-        $tpl = $this->_twig->loadTemplate('contact.twig.html');
+        $tpl = $this->_twig->loadTemplate('contact.twig');
         return $tpl->render(array());
+    }
+
+    /**
+     * Contact Us page - submission.
+     *
+     * @POST
+     * @Path("/contact")
+     * @Consumes({"application/x-www-form-urlencoded"})
+     * @Produces({"text/html"})
+     */
+    public function contactsubmit() {
+        parse_str($this->_request->getRequestBody(), $req);
+
+        $builder = $this->_uriInfo->getAbsolutePathBuilder();
+        echo $builder->build();
+
+        return 'Thanks for sending us your input, ' . $req['fullname'] . '!';
     }
 }

@@ -1,0 +1,26 @@
+{% extends 'layout.twig' %}
+
+{% block title %}About{% endblock %}
+
+{% block body %}
+    <section>
+        <p>
+            This microsite example is powered by only by
+            <a href="http://sonno.360i.com">Sonno</a> as the application
+            framework, and <a href="http://twig.sensiolabs.org">Twig</a> as the
+            template engine.
+        </p>
+        <p>
+            This example demonstrates the flexibility of Sonno by illustrating
+            how it can be used as a microframework, much like
+            <a href="http://silex.sensiolabs.org">Silex</a> or
+            <a href="http://www.sinatrarb.com">Sinatra</a> in the Ruby world.
+        <p>
+            The Sonno application consists of only a single Resource class (the
+            "root" resource) which behaves as a controller in the traditional
+            MVC paradigm. Each class method responds to a single URI (for a
+            specific HTTP method) and invokes Twig to return HTML from a view
+            template.
+        <p>
+    </section>
+{% endblock %}
