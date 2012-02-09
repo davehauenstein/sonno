@@ -171,14 +171,13 @@ class AnnotationDriver implements DriverInterface
 
         foreach ($resources as $resourceClass) {
             $class       = new ReflectionClass($resourceClass);
-            $params      = $this->_extractClassParams($class, $reader);
+            $classParams = $this->_extractClassParams($class, $reader);
 
             $properties = $class->getProperties();
-            $params = array();
             foreach ($properties as $property) {
                 // Class and property params don't overlap, just merge.
-                $params = array_merge(
-                    $params,
+                $classParams = array_merge(
+                    $classParams,
                     $this->_extractPropertyParams($property, $reader)
                 );
             }
@@ -187,7 +186,7 @@ class AnnotationDriver implements DriverInterface
             foreach ($methods as $method) {
                 // Class and method params don't overlap either, just merge.
                 $params = array_merge(
-                    $params,
+                    $classParams,
                     $this->_extractMethodParams($method, $reader)
                 );
                 if(false !== $params) {
