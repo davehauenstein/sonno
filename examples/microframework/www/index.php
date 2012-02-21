@@ -10,6 +10,7 @@
  */
 
 define('APPLICATION_PATH', realpath(__DIR__ . '/../'));
+error_reporting(E_ALL);
 
 // Require our autoloader. It simplest to use Doctrine's Autoloader since
 // Doctrine-Common is already installed for Annotation reading and is on the 

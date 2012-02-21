@@ -31,6 +31,17 @@ use Sonno\Http\Response\Response,
     Twig_Function_Function,
     Twig_Loader_Filesystem;
 
+/**
+ * The root resource class is effectively a single controller class (in a
+ * traditional MVC paradigm) whose class methods are actions that produce an
+ * HTML representation for each page of our microsite.
+ * 
+ * Typically, a class method will simply render a Twig template to produce the
+ * required HTML document representation.
+ *
+ * @Path("/")
+ * @Produces({"text/html"})
+ */
 class RootResource
 {
     /**
@@ -65,11 +76,10 @@ class RootResource
     }
 
     /**
-     * Root resource.
+     * Home page.
+     * This is static markup rendered by the Twig templating engine.
      *
      * @GET
-     * @Path("/")
-     * @Produces({"text/html"})
      */
     public function home()
     {
@@ -79,10 +89,10 @@ class RootResource
 
     /**
      * About page.
+     * This is static markup rendered by the Twig templating engine.
      *
      * @GET
      * @Path("/about")
-     * @Produces({"text/html"})
      */
     public function about()
     {
@@ -91,11 +101,11 @@ class RootResource
     }
 
     /**
-     * Contact Us page.
+     * Contact page.
+     * This is static markup rendered by the Twig templating engine.
      *
      * @GET
      * @Path("/contact")
-     * @Produces({"text/html"})
      */
     public function contact()
     {
@@ -104,19 +114,21 @@ class RootResource
     }
 
     /**
-     * Contact Us page - submission.
+     * Contact submission page.
+     * Accepts POST requests with an entity body as
+     * application/x-www-form-urlencoded which is the default MIME type sent by
+     * a web browser when you submit a form.
+     * The request entity can be parsed using the PHP native function parse_str
+     * which parses a URL-encoded set of key/value pairs. This exposes the form
+     * data submitted by the web browser.
      *
      * @POST
      * @Path("/contact")
      * @Consumes({"application/x-www-form-urlencoded"})
-     * @Produces({"text/html"})
+     * @Produces({"text/plain"})
      */
     public function contactsubmit() {
         parse_str($this->_request->getRequestBody(), $req);
-
-        $builder = $this->_uriInfo->getAbsolutePathBuilder();
-        echo $builder->build();
-
         return 'Thanks for sending us your input, ' . $req['fullname'] . '!';
     }
 }
