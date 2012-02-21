@@ -15,6 +15,8 @@ namespace Sonno\Configuration;
 use Sonno\Configuration\Route;
 
 /**
+ * Configuration encapsulates all necessary configuration parameters for a web
+ * service.
  *
  * @category Sonno
  * @package  Sonno\Configuration
@@ -32,7 +34,7 @@ class Configuration
     /**
      * An array of Route objects.
      *
-     * var array<\Sonno\Configuration\Route>
+     * var array<Sonno\Configuration\Route>
      */
     protected $_routes = array();
 
@@ -41,7 +43,7 @@ class Configuration
      * and ensure a forward slash '/' exists at the beginning of the string.
      *
      * @param $basePath string Application base path.
-     * @return \Sonno\Configuration\Configuration Implements a fluent
+     * @return Sonno\Configuration\Configuration Implements a fluent
      *         interface.
      */
     public function setBasePath($basePath)
@@ -63,7 +65,7 @@ class Configuration
     /**
      * Add a route to the _routes property.
      * 
-     * @return \Sonno\Configuration\Configuration Implements a fluent
+     * @return Sonno\Configuration\Configuration Implements a fluent
      *         interface.
      */
     public function addRoute(Route $route)
@@ -75,7 +77,7 @@ class Configuration
     /**
      * Returns an array of all routes.
      *
-     * @return array<\Sonno\Configuration\Route>
+     * @return array<Sonno\Configuration\Route>
      */
     public function getRoutes()
     {
