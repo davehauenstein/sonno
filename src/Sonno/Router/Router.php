@@ -15,7 +15,7 @@ namespace Sonno\Router;
 use Sonno\Http\Request\RequestInterface,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
-    Sonno\Http\Exception\UnsupportedMediaTypeException,
+    Sonno\Http\Exception\NotAcceptableException,
     Sonno\Configuration\Configuration,
     InvalidArgumentException;
 
@@ -155,7 +155,7 @@ class Router
         }
 
         if (empty($candidateRoutes)) {
-            throw new UnsupportedMediaTypeException;
+            throw new NotAcceptableException;
         }
 
         return $candidateRoutes;

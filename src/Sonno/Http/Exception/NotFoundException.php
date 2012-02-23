@@ -12,7 +12,7 @@
 
 namespace Sonno\Http\Exception;
 
-use Exception;
+use Sonno\Application\WebApplicationException;
 
 /**
  * An exception that occurs when a resource class cannot be located.
@@ -21,6 +21,10 @@ use Exception;
  * @package    Sonno\Http\Exception
  * @author     Tharsan Bhuvanendran <me@tharsan.com>
  */
-class NotFoundException extends Exception
+class NotFoundException extends WebApplicationException
 {
+    public function __construct()
+    {
+        parent::__construct(404);
+    }
 }

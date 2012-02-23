@@ -83,11 +83,11 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     /**
      * Test that when the resource located by match() can't produce a
      * representation of the type desired by the incoming request,
-     * it throws a UnsupportedMediaTypeException exception.
+     * it throws a NotAcceptableException exception.
      *
-     * @expectedException Sonno\Http\Exception\UnsupportedMediaTypeException
+     * @expectedException Sonno\Http\Exception\NotAcceptableException
      */
-    public function testThrowsUnsupportedMediaTypeWhenResourceCannotProduceRepresentation()
+    public function testThrowsNotAcceptableExceptionWhenResourceCannotProduceRepresentation()
     {
         $route = $this
             ->getMockBuilder('Sonno\Configuration\Route')

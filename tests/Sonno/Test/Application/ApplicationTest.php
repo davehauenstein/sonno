@@ -161,7 +161,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest();
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(404, $response->getStatusCode());
     }
@@ -179,7 +179,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest();
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(404, $response->getStatusCode());
     }
@@ -198,7 +198,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest('POST', '/test/123');
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(405, $response->getStatusCode());
     }
@@ -221,7 +221,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest('GET', '/test/123');
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(406, $response->getStatusCode());
     }
@@ -243,7 +243,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest('GET', '/service/v1/test/123');
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         // expect a 406 here because the request cannot be satisfied due to
         // unacceptable content characteristics (but does match resource based
@@ -307,7 +307,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('random response content', $response->getContent());
@@ -341,7 +341,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('blue', $response->getContent());
@@ -376,7 +376,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
@@ -445,7 +445,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
@@ -480,46 +480,10 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
-    }
-
-    /**
-     * Test a custom resource creator function.
-     *
-     * @return void
-     */
-    public function testCustomResourceInstantiator()
-    {
-        $config = $this->buildMockConfiguration(array(
-            array(
-                'path'               => '/test/{str}',
-                'httpMethod'         => 'GET',
-                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'randomResponse',
-                'produces'           => array('text/plain'),
-                'contexts'           => array(), // do not inject context
-                'pathParams'         => array('str'),
-                'queryParams'        => array('op'))
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'GET',
-            '/service/v1/test/camelCase',
-            null,
-            new Variant('text/plain'),
-            array('op' => 'upper')
-        );
-
-        $app = new Application($config);
-        $app->setResourceCreationFunction(function($className) {
-            return new $className('constructor argument 0');
-        });
-        $response = @$app->run($request);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("constructor argument 0", $response->getContent());
     }
 
     /**
@@ -550,7 +514,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(405, $response->getStatusCode());
     }

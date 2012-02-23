@@ -56,6 +56,6 @@ class TestResource
 
     public function causeError()
     {
-        throw new \Sonno\Application\WebApplicationException(405);
+        throw new \Sonno\Http\Exception\MethodNotAllowedException;
     }
 }

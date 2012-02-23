@@ -19,10 +19,8 @@ use ReflectionClass,
     Sonno\Configuration\Route,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
-    Sonno\Http\Exception\NotFoundException,
-    Sonno\Http\Exception\MethodNotAllowedException,
-    Sonno\Http\Exception\UnsupportedMediaTypeException,
     Sonno\Http\Variant,
+    Sonno\Dispatcher\Dispatcher,
     Sonno\Router\Router,
     Sonno\Uri\UriInfo;
 
@@ -44,14 +42,6 @@ class Application
      * @var Sonno\Configuration\Configuration
      */
     protected $_config;
-
-    /**
-     * A function callback responsible for the instantiation of a resource
-     * class.
-     *
-     * @var callback
-     */
-    protected $_resourceCreationFunction;
 
     /**
      * Construct a new Application.
@@ -91,11 +81,6 @@ class Application
         return $this;
     }
 
-    public function setResourceCreationFunction($resourceCreationFunction)
-    {
-        $this->_resourceCreationFunction = $resourceCreationFunction;
-    }
-
     /**
      * Process an incoming request.
      * Determine the appropriate route for the request using a Router, and then
@@ -114,16 +99,8 @@ class Application
         $router      = new Router($this->_config);
         try {
             $routes = $router->match($request, $pathParams);
-        } catch(NotFoundException $e) {
-            $response = new Response(404);
-            $response->sendResponse();
-            return $response;
-        } catch(MethodNotAllowedException $e) {
-            $response = new Response(405);
-            $response->sendResponse();
-            return $response;
-        } catch(UnsupportedMediaTypeException $e) {
-            $response = new Response(415);
+        } catch(WebApplicationException $e) {
+            $response = $e->getResponse();
             $response->sendResponse();
             return $response;
         }
@@ -157,16 +134,8 @@ class Application
         $uriInfo->setQueryParameters($request->getQueryParams());
 
         // execute the resource class method and obtain the result
-        $result = $this->_executeResource(
-            $selectedRoute->getResourceClassName(),
-            $selectedRoute->getResourceMethodName(),
-            $selectedRoute,
-            $uriInfo,
-            array(
-                'Request' => $request,
-                'UriInfo' => $uriInfo,
-            )
-        );
+        $dispatcher = new Dispatcher($request, $uriInfo);
+        $result = $dispatcher->dispatch($selectedRoute);
 
         // object is a scalar value: construct a new Response
         if (is_scalar($result)) {
@@ -199,100 +168,5 @@ class Application
         } else {
             throw new MalformedResourceRepresentationException();
         }
-    }
-
-    /**
-     * Create an instance of a resource class, execute a class method and
-     * return the result.
-     *
-     * @param $className string The class name.
-     * @param $methodName string The class' method name.
-     * @param $route Sonno\Configuration\Route The matched route.
-     * @param $uriInfo Sonno\Uri\UriInfo Information about the URI.
-     * @param $contextInjections array A map of context variables that can be
-     *                                 injected into the resource class prior to
-     *                                 execution.
-     * @return mixed
-     */
-    protected function _executeResource(
-        $className,
-        $methodName,
-        $route,
-        $uriInfo,
-        $contextInjections = array())
-    {
-        // obtain Reflection objects for the resource method selected
-        $reflClass  = new ReflectionClass($className);
-        $reflMethod = $reflClass->getMethod($methodName);
-
-        // instantiate the selected resource class
-        $resource = $this->_createResourceInstance($className);
-
-        // construct a flat array of method arguments for the resource method
-        $pathParamValues     = $uriInfo->getPathParameters();
-        $queryParamValues    = $uriInfo->getQueryParameters();
-        $pathParams          = $route->getPathParams() ?: array();
-        $queryParams         = $route->getQueryParams() ?: array();
-        $resourceMethodArgs  = array();
-
-        foreach ($reflMethod->getParameters() as $idx => $reflParam) {
-            $parameterName = $reflParam->getName();
-
-            // search for an argument value in the Path parameter collection
-            if (in_array($parameterName, $pathParams)
-                && isset($pathParamValues[$parameterName])
-            ) {
-                $resourceMethodArgs[$idx] = $pathParamValues[$parameterName];
-            }
-
-            // search for an argument value in the Query parameter collection
-            if (in_array($parameterName, $queryParams)
-                && isset($queryParamValues[$parameterName])
-            ) {
-                $resourceMethodArgs[$idx] = $queryParamValues[$parameterName];
-            }
-        }
-
-        // inject Context variables into the resource class instance
-        foreach ($route->getContexts() as $propertyName => $contextType) {
-            try {
-                $reflProperty = $reflClass->getProperty($propertyName);
-            } catch(\ReflectionException $e) {
-                continue;
-            }
-
-            $reflProperty->setAccessible(true);
-
-            if (isset($contextInjections[$contextType])) {
-                $reflProperty->setValue(
-                    $resource,
-                    $contextInjections[$contextType]
-                );
-            }
-        }
-
-        // execute the selected resource method using the generated method
-        // arguments
-        try {
-            return $reflMethod->invokeArgs($resource, $resourceMethodArgs);
-        } catch(WebApplicationException $e) {
-            return $e->getResponse();
-        }
-    }
-
-    /**
-     * Instantiate a named class, and return the instance.
-     * Uses the Application's custom resource creation function, if one is
-     * available.
-     * Otherwise, invokes the resource class' default constructor.
-     *
-     * @param $className string The name of the class to instantiate.
-     * @return object
-     */
-    protected function _createResourceInstance($className)
-    {
-        return is_callable($this->_resourceCreationFunction)
-            ? call_user_func($this->_resourceCreationFunction, $className)
-            : new $className;
     }
 }
