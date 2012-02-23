@@ -53,4 +53,9 @@ class TestResource
     {
         return new Polo($colour);
     }
+
+    public function causeError()
+    {
+        throw new \Sonno\Application\WebApplicationException(405);
+    }
 }

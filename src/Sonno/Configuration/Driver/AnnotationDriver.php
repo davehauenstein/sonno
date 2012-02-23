@@ -177,7 +177,7 @@ class AnnotationDriver implements DriverInterface
             foreach ($properties as $property) {
                 // Class and property params don't overlap, just merge.
                 $params = array_merge_recursive(
-                    $classParams,
+                    $params,
                     $this->_extractPropertyParams($property, $reader)
                 );
             }
@@ -185,13 +185,11 @@ class AnnotationDriver implements DriverInterface
             $methods = $class->getMethods();
             foreach ($methods as $method) {
                 // Class and method params don't overlap either, just merge.
-                $params = array_merge(
-                    $params,
-                    $this->_extractMethodParams($method, $reader)
-                );
+                $methodParams = $this->_extractMethodParams($method, $reader);
 
-                if (false !== $params) {
-                    $config->addRoute(new Route($params));
+                if (false !== $methodParams) {
+                    $routeParams = array_merge($params, $methodParams);
+                    $config->addRoute(new Route($routeParams));
                 }
             }
         }

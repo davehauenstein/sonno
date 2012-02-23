@@ -272,7 +272,11 @@ class Application
 
         // execute the selected resource method using the generated method
         // arguments
-        return $reflMethod->invokeArgs($resource, $resourceMethodArgs);
+        try {
+            return $reflMethod->invokeArgs($resource, $resourceMethodArgs);
+        } catch(WebApplicationException $e) {
+            return $e->getResponse();
+        }
     }
 
     /**
