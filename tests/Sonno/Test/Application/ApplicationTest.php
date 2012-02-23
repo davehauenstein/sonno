@@ -37,8 +37,15 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     /**
      * Generate a mock \Sonno\Http\Request\RequestInterface object.
      *
-     * @param $method string The HTTP request method.
-     * @param $uri    string The HTTP request URI.
+     * @param string $method The HTTP request method.
+     * @param string $uri The HTTP request URI.
+     * @param string $contentType The HTTP request body content type.
+     * @param string $selectedVariant The variant that the content negotiation
+     *      should select.
+     * @param array $queryParams The HTTP request query string parameters.
+     * @param array $headers The array of HTTP header names to values.
+     * @param string $contentBody The HTTP request body content.
+     *
      * @return Sonno\Http\Request\RequestInterface
      */
     protected function buildMockRequest(
@@ -46,7 +53,9 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $uri = null,
         $contentType = null,
         $selectedVariant = null,
-        $queryParams = array()
+        $queryParams = array(),
+        $headers = array(),
+        $contentBody = null
     ) {
         $request = $this
             ->getMockBuilder('Sonno\Http\Request\Request')
@@ -93,10 +102,22 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
                 }));
         }
 
+        if ($contentBody) {
+            $request
+                ->expects($this->any())
+                ->method('getRequestBody')
+                ->will($this->returnValue($contentBody));
+        }
+
         $request
             ->expects($this->any())
             ->method('getQueryParams')
             ->will($this->returnValue($queryParams));
+
+        $request
+            ->expects($this->any())
+            ->method('getHeaders')
+            ->will($this->returnValue($headers));
 
         return $request;
     }
@@ -403,6 +424,32 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      */
     public function testFormParam()
     {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test/paper',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'modifyString',
+                'produces'           => array('text/plain'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
+                'formParams'         => array('str'),
+                'queryParams'        => array('op'))
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/test/paper',
+            null,
+            new Variant('text/plain'),
+            array('op' => 'upper'),
+            array(),
+            'str=hackeysackey'
+        );
+
+        $app = new Application($config);
+        $response = $app->run($request);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("HACKEYSACKEY|GET", $response->getContent());
     }
 
     /**
@@ -414,6 +461,31 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      */
     public function testHeaderParam()
     {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test/{str}',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'modifyString',
+                'produces'           => array('text/plain'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
+                'headerParams'       => array('str'),
+                'queryParams'        => array('op'))
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/test/camelCase',
+            null,
+            new Variant('text/plain'),
+            array('op' => 'upper'),
+            array('str' => 'Cat')
+        );
+
+        $app = new Application($config);
+        $response = $app->run($request);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("CAT|GET", $response->getContent());
     }
 
     /**

@@ -97,9 +97,14 @@ class Dispatcher
         // construct a flat array of method arguments for the resource method
         $pathParamValues     = $this->_uriInfo->getPathParameters();
         $queryParamValues    = $this->_uriInfo->getQueryParameters();
+        $headerParamValues   = $this->_request->getHeaders();
         $pathParams          = $route->getPathParams() ?: array();
         $queryParams         = $route->getQueryParams() ?: array();
+        $headerParams        = $route->getHeaderParams() ?: array();
+        $formParams          = $route->getFormParams() ?: array();
         $resourceMethodArgs  = array();
+
+        parse_str($this->_request->getRequestBody(), $formParamValues);
 
         foreach ($reflMethod->getParameters() as $idx => $reflParam) {
             $parameterName = $reflParam->getName();
@@ -116,6 +121,20 @@ class Dispatcher
                 && isset($queryParamValues[$parameterName])
             ) {
                 $resourceMethodArgs[$idx] = $queryParamValues[$parameterName];
+            }
+
+            // search for an argument value in the Header parameter collection
+            if (in_array($parameterName, $headerParams)
+                && isset($headerParamValues[$parameterName])
+            ) {
+                $resourceMethodArgs[$idx] = $headerParamValues[$parameterName];
+            }
+
+            // search for an argument value in the Form parameter collection
+            if (in_array($parameterName, $formParams)
+                && isset($formParamValues[$parameterName])
+            ) {
+                $resourceMethodArgs[$idx] = $formParamValues[$parameterName];
             }
         }
 
