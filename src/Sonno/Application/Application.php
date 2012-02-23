@@ -82,7 +82,8 @@ class Application
      * Setter for configuration object.
      *
      * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\AnnotationDriver Implements fluent interface.
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
+    *       interface.
      */
     public function setConfig(Configuration $config)
     {
