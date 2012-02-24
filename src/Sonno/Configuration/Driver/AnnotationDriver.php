@@ -76,7 +76,7 @@ class AnnotationDriver implements DriverInterface
      * Setter for configuration object.
      *
      * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\AnnotationDriver Implements fluent
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setConfig(Configuration $config)
@@ -102,7 +102,7 @@ class AnnotationDriver implements DriverInterface
      * Setter for annotation reader object.
      *
      * @param  Sonno\Annotation\Reader\ReaderInterface $reader
-     * @return Sonno\Configuration\AnnotationDriver Implements fluent
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setReader(ReaderInterface $reader)

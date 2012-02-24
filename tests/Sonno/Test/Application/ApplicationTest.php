@@ -590,4 +590,105 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(405, $response->getStatusCode());
     }
+
+    public function testResponseFilterCallback()
+    {
+        $config = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'causeError',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/nonexistent'
+        );
+
+        $app = new Application($config);
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setHeaders(array('Content-Type' => 'text/plain'));
+        });
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setContent('Sorry, but that resource does not exist');
+        });
+        $response = $app->run($request);
+
+        $this->assertEquals('text/plain', $response->getHeader('Content-Type'));
+        $this->assertEquals('Sorry, but that resource does not exist', $response->getContent());
+    }
+
+    public function testUnregisterSpecificFilterCallback()
+    {
+        $config = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'causeError',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/nonexistent'
+        );
+
+        $app = new Application($config);
+
+        $tmpCallback = function($request, $response) {
+            $response->setHeaders(array('Content-Type' => 'text/html'));
+        };
+        $app->registerResponseFilter(404, $tmpCallback);
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setContent('Sorry, but that resource does not exist');
+        });
+        $app->unregisterResponseFilter(404, $tmpCallback);
+
+        $response = $app->run($request);
+
+        $this->assertEquals('Sorry, but that resource does not exist', $response->getContent());
+    }
+
+    public function testUnregisterAllFilterCallbacks()
+    {
+        $config = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'causeError',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/nonexistent'
+        );
+
+        $app = new Application($config);
+
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setHeaders(array('Content-Type' => 'text/html'));
+        });
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setContent('Sorry, but that resource does not exist');
+        });
+        $app->unregisterResponseFilter(404);
+
+        $response = $app->run($request);
+
+        $this->assertNull($response->getContent());
+    }
 }

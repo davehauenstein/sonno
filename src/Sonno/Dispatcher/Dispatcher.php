@@ -43,8 +43,8 @@ class Dispatcher
     /**
      * Construct a new Application.
      *
-     * @param Sonno\Request\RequestInterface The incoming HTTP request.
-     * @param Sonno\Uri\UriInfo Information about the URI.
+     * @param Sonno\Request\RequestInterface $request The incoming HTTP request.
+     * @param Sonno\Uri\UriInfo $uriInfo Information about the URI.
      */
     public function __construct(RequestInterface $request, UriInfo $uriInfo)
     {

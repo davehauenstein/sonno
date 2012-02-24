@@ -24,7 +24,7 @@ interface Renderable
     /**
      * Create a representation of this object in the given media type.
      *
-     * @param $mediaType The media (MIME) type to produce a representation in.
+     * @param string $mediaType The media (MIME) type to produce a representation in.
      * @return mixed A scalar value.
      */
     public function render($mediaType);

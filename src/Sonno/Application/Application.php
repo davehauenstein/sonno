@@ -17,6 +17,7 @@ use ReflectionClass,
     ReflectionProperty,
     Sonno\Configuration\Configuration,
     Sonno\Configuration\Route,
+    Sonno\Http\Exception\NotAcceptableException,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
     Sonno\Http\Variant,
@@ -44,10 +45,17 @@ class Application
     protected $_config;
 
     /**
+     * A registry of filters that may perform additional processing on a
+     * {@link Sonno\Response\Response} before it is delivered.
+     *
+     * @var array
+     */
+    protected $_responseFilters;
+
+    /**
      * Construct a new Application.
      *
-     * @param Sonno\Configuration\Configuration $config Resource
-     *                                                  configuration data.
+     * @param Sonno\Configuration\Configuration $config Resource configuration.
      */
     public function __construct(Configuration $config)
     {
@@ -94,48 +102,46 @@ class Application
      */
     public function run(RequestInterface $request)
     {
-        // attempt to find routes that match the current request
-        $pathParams  = array();
-        $router      = new Router($this->_config);
+        $result = NULL;
+
         try {
+            // attempt to find routes that match the current request
+            $router = new Router($this->_config);
             $routes = $router->match($request, $pathParams);
-        } catch(WebApplicationException $e) {
-            $response = $e->getResponse();
-            $response->sendResponse();
-            return $response;
-        }
 
-        // construct a hash map of Variants based on Routes
-        $variantMap = array(); // variant hash => <Sonno\Http\Variant>
-        $variants   = array(); // array<Sonno\Http\Variant>
-        foreach ($routes as $route) {
-            $routeProduces = $route->getProduces();
-            foreach ($routeProduces as $produces) {
-                $variant = new Variant(null, null, $produces);
-                $variantHash = spl_object_hash($variant);
-                $variantMap[$variantHash] = $route;
-                $variants[] = $variant;
+            // construct a hash map of Variants based on Routes
+            $variantMap = array(); // variant hash => <Sonno\Http\Variant>
+            $variants   = array(); // array<Sonno\Http\Variant>
+            foreach ($routes as $route) {
+                $routeProduces = $route->getProduces();
+                foreach ($routeProduces as $produces) {
+                    $variant = new Variant(null, null, $produces);
+                    $variantHash = spl_object_hash($variant);
+                    $variantMap[$variantHash] = $route;
+                    $variants[] = $variant;
+                }
             }
+
+            // select a Variant and find the corresponding route
+            $selectedVariant = $request->selectVariant($variants);
+            if (null == $selectedVariant) {
+                throw new NotAcceptableException;
+            }
+
+            $selectedVariantHash = spl_object_hash($selectedVariant);
+            $selectedRoute = $variantMap[$selectedVariantHash];
+
+            // maintain URI information for resource class context injection
+            $uriInfo = new UriInfo($this->_config, $request, $selectedRoute);
+            $uriInfo->setPathParameters($pathParams);
+            $uriInfo->setQueryParameters($request->getQueryParams());
+
+            // execute the resource class method and obtain the result
+            $dispatcher = new Dispatcher($request, $uriInfo);
+            $result = $dispatcher->dispatch($selectedRoute);
+        } catch(WebApplicationException $e) {
+            $result = $e->getResponse();
         }
-
-        // select a Variant and find the corresponding route
-        $selectedVariant = $request->selectVariant($variants);
-        if (null == $selectedVariant) {
-            $response = new Response(406);
-            $response->sendResponse();
-            return $response;
-        }
-        $selectedVariantHash = spl_object_hash($selectedVariant);
-        $selectedRoute = $variantMap[$selectedVariantHash];
-
-        // maintain URI information for resource class context injection
-        $uriInfo = new UriInfo($this->_config, $request, $selectedRoute);
-        $uriInfo->setPathParameters($pathParams);
-        $uriInfo->setQueryParameters($request->getQueryParams());
-
-        // execute the resource class method and obtain the result
-        $dispatcher = new Dispatcher($request, $uriInfo);
-        $result = $dispatcher->dispatch($selectedRoute);
 
         // object is a scalar value: construct a new Response
         if (is_scalar($result)) {
@@ -144,13 +150,10 @@ class Application
                 $result,
                 array('Content-Type' => $selectedVariant->getMediaType())
             );
-            $response->sendResponse();
-            return $response;
 
         // object is already a Response
         } else if ($result instanceof Response) {
-            $result->sendResponse();
-            return $result;
+            $response = $result;
 
         // object implements the Renderable interface: construct a Response
         // using the reprsentation produced by render()
@@ -161,12 +164,83 @@ class Application
                 array('Content-Type' => $selectedVariant->getMediaType())
             );
 
-            $response->sendResponse();
-            return $response;
-
         // cannot determine how to handle the object returned
         } else {
-            throw new MalformedResourceRepresentationException();
+            throw new MalformedResourceRepresentationException;
         }
+
+        // process any HTTP status filter callbacks
+        $statusCode = $response->getStatusCode();
+        if (isset($this->_responseFilters[$statusCode])) {
+            foreach ($this->_responseFilters[$statusCode] as $filterCallback) {
+                $filterCallback($request, $response);
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * Register a new response filter for a specific HTTP status code.
+     *
+     * @param int $statusCode The HTTP status code to register a filter for.
+     * @param Callable $filterCallback The PHP callback to execute when the
+     *      HTTP error registered against occurs.
+     *
+     * @throws InvalidArgumentException
+     * @return Sonno\Application\Application Implements fluent interface.
+     */
+    public function registerResponseFilter($statusCode, $filterCallback)
+    {
+        if (!is_callable($filterCallback)) {
+            throw new InvalidArgumentException(
+                'The Filter Callback must be callable as a PHP function.'
+            );
+        }
+
+        if (isset($this->_responseFilters[$statusCode])) {
+            $this->_responseFilters[$statusCode][] = $filterCallback;
+        } else {
+            $this->_responseFilters[$statusCode] = array($filterCallback);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Unregister a single response filter callback, or all filter callbacks
+     * for a specific status code.
+     *
+     * @param int $statusCode The HTTP status code to register a filter for.
+     * @param Callable|null $filterCallback The PHP callback to remove from the
+     *      response filter set, or NULL to remove all filters from the
+     *      specified HTTP status code filter set.
+     *
+     * @return Sonno\Application\Application Implements fluent interface.
+     */
+    public function unregisterResponseFilter(
+        $statusCode,
+        $filterCallback = NULL
+    )
+    {
+        if (isset($this->_responseFilters[$statusCode])) {
+            // unregister all response filters for the specified status code
+            if (is_null($filterCallback)) {
+                unset($this->_responseFilters[$statusCode]);
+
+            // locate & remove the specified $filterCallback in the filter set
+            } else {
+                $key = array_search(
+                    $filterCallback,
+                    $this->_responseFilters[$statusCode]
+                );
+
+                if (false !== $key) {
+                    unset($this->_responseFilters[$statusCode][$key]);
+                }
+            }
+        }
+
+        return $this;
     }
 }

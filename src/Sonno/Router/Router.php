@@ -38,6 +38,8 @@ class Router
      */
     protected $_config;
 
+    protected $_errorFilters;
+
     /**
      * Construct a new Application.
      *
