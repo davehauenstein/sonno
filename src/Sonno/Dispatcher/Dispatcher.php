@@ -15,7 +15,9 @@ namespace Sonno\Dispatcher;
 use Sonno\Application\WebApplicationException,
     Sonno\Http\Request\RequestInterface,
     Sonno\Configuration\Route,
-    Sonno\Uri\UriInfo;
+    Sonno\Uri\UriInfo,
+    ReflectionClass,
+    ReflectionMethod;
 
 /**
  * Responsible for executing code specified by a Route.
@@ -86,7 +88,7 @@ class Dispatcher
     public function dispatch(Route $route)
     {
         // obtain Reflection objects for the resource method selected
-        $reflClass  = new \ReflectionClass($route->getResourceClassName());
+        $reflClass  = new ReflectionClass($route->getResourceClassName());
         $reflMethod = $reflClass->getMethod($route->getResourceMethodName());
 
         // instantiate the selected resource class
@@ -94,7 +96,65 @@ class Dispatcher
             $route->getResourceClassName()
         );
 
-        // construct a flat array of method arguments for the resource method
+        // inject Context variables into the resource class instance
+        $contextInjections = array(
+            'Request' => $this->_request,
+            'UriInfo' => $this->_uriInfo
+        );
+
+        foreach ($route->getContexts() as $propertyName => $contextType) {
+            try {
+                $reflProperty = $reflClass->getProperty($propertyName);
+            } catch(\ReflectionException $e) {
+                continue;
+            }
+
+            $reflProperty->setAccessible(true);
+
+            if (isset($contextInjections[$contextType])) {
+                $reflProperty->setValue(
+                    $resource,
+                    $contextInjections[$contextType]
+                );
+            }
+        }
+
+        // execute the selected resource method using the generated method
+        // arguments
+        $methodArgs = $this->_getResourceMethodArguments($route, $reflMethod);
+
+        try {
+            return $reflMethod->invokeArgs($resource, $methodArgs);
+        } catch(WebApplicationException $e) {
+            return $e->getResponse();
+        }
+    }
+
+    /**
+     * Instantiate a named class, and return the instance.
+     *
+     * @param $className string The name of the class to instantiate.
+     * @return object
+     */
+    protected function _createResourceInstance($className)
+    {
+        return new $className;
+    }
+
+    /**
+     * Construct a flat array of method arguments for the resource method.
+     *
+     * @param Route            $route  The route being processed.
+     * @param ReflectionMethod $method The resource class method that arguments
+     *                                 are needed for.
+     *
+     * @return array
+     */
+    protected function _getResourceMethodArguments(
+        Route $route,
+        ReflectionMethod $method
+    )
+    {
         $pathParamValues     = $this->_uriInfo->getPathParameters();
         $queryParamValues    = $this->_uriInfo->getQueryParameters();
         $headerParamValues   = $this->_request->getHeaders();
@@ -106,7 +166,7 @@ class Dispatcher
 
         parse_str($this->_request->getRequestBody(), $formParamValues);
 
-        foreach ($reflMethod->getParameters() as $idx => $reflParam) {
+        foreach ($method->getParameters() as $idx => $reflParam) {
             $parameterName = $reflParam->getName();
 
             // search for an argument value in the Path parameter collection
@@ -138,47 +198,7 @@ class Dispatcher
             }
         }
 
-        // inject Context variables into the resource class instance
-        $contextInjections = array(
-            'Request' => $this->_request,
-            'UriInfo' => $this->_uriInfo
-        );
-
-        foreach ($route->getContexts() as $propertyName => $contextType) {
-            try {
-                $reflProperty = $reflClass->getProperty($propertyName);
-            } catch(\ReflectionException $e) {
-                continue;
-            }
-
-            $reflProperty->setAccessible(true);
-
-            if (isset($contextInjections[$contextType])) {
-                $reflProperty->setValue(
-                    $resource,
-                    $contextInjections[$contextType]
-                );
-            }
-        }
-
-        // execute the selected resource method using the generated method
-        // arguments
-        try {
-            return $reflMethod->invokeArgs($resource, $resourceMethodArgs);
-        } catch(WebApplicationException $e) {
-            return $e->getResponse();
-        }
-    }
-
-    /**
-     * Instantiate a named class, and return the instance.
-     *
-     * @param $className string The name of the class to instantiate.
-     * @return object
-     */
-    protected function _createResourceInstance($className)
-    {
-        return new $className;
+        return $resourceMethodArgs;
     }
 }
 
