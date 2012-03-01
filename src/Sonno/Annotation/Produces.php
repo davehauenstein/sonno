@@ -42,7 +42,7 @@ class Produces
     protected $_mediaTypes = array('*/*');
 
     /**
-     * Construct a new Consumes instance.
+     * Construct a new Produces instance.
      *
      * @param $mediaTypes array A list of media types.
      *        E.g. {"image/jpeg","image/gif"}.

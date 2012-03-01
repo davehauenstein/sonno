@@ -5,11 +5,17 @@
 {% block body %}
     <section>
         <p>Send us a quick message using the form below!</p>
+        <p>
+            The form action is handled by a resource function that accepts POST
+            requests with an entity body as 
+            <code>application/x-www-form-urlencoded</code> which is the default
+            MIME type sent by a web browser when you submit a form.
+        </p>
         <form action="/contact" method="post">
-            <label>Full Name: <input type="text" name="fullname" /></label>
-            <br/>
-            <label>Message: <textarea cols="30" rows="10" name="message"></textarea></label>
-            <br/>
+            <label for="fullname">Full Name</label>
+            <input type="text" name="fullname" id="fullname" />
+            <label for="message">Message</label>
+            <textarea cols="30" rows="10" name="message" id="message"></textarea>
             <input type="submit" value="Submit" />
         </form>
     </section>

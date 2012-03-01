@@ -24,6 +24,153 @@ use Sonno\Application\Application,
 class ApplicationTest extends \PHPUnit_Framework_TestCase
 {
     /**
+     * Setup a text fixture.
+     * Set the Response content output stream to the abyss.
+     *
+     * @return void
+     */
+    protected function setUp()
+    {
+        \Sonno\Http\Response\Response::setContentOutputStream('php://temp');
+    }
+
+    /**
+     * Generate a mock \Sonno\Http\Request\RequestInterface object.
+     *
+     * @param string $method The HTTP request method.
+     * @param string $uri The HTTP request URI.
+     * @param string $contentType The HTTP request body content type.
+     * @param string $selectedVariant The variant that the content negotiation
+     *      should select.
+     * @param array $queryParams The HTTP request query string parameters.
+     * @param array $headers The array of HTTP header names to values.
+     * @param string $contentBody The HTTP request body content.
+     *
+     * @return Sonno\Http\Request\RequestInterface
+     */
+    protected function buildMockRequest(
+        $method = null,
+        $uri = null,
+        $contentType = null,
+        $selectedVariant = null,
+        $queryParams = array(),
+        $headers = array(),
+        $contentBody = null
+    ) {
+        $request = $this
+            ->getMockBuilder('Sonno\Http\Request\Request')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        if ($uri) {
+            $request
+                ->expects($this->any())
+                ->method('getRequestUri')
+                ->will($this->returnValue($uri));
+        }
+
+        if ($method) {
+            $request
+                ->expects($this->any())
+                ->method('getMethod')
+                ->will($this->returnValue($method));
+        }
+
+        if ($contentType) {
+            $request
+                ->expects($this->any())
+                ->method('getContentType')
+                ->will($this->returnValue($contentType));
+        }
+
+        if (null == $selectedVariant) {
+            $request
+                ->expects($this->any())
+                ->method('selectVariant')
+                ->will($this->returnValue(null));
+        } else {
+            $request
+                ->expects($this->any())
+                ->method('selectVariant')
+                ->will($this->returnCallback(function(array $arr) {
+                    if(!count($arr))
+                        return null;
+                    else {
+                        $keys = array_keys($arr);
+                        return $arr[$keys[0]];
+                    }
+                }));
+        }
+
+        if ($contentBody) {
+            $request
+                ->expects($this->any())
+                ->method('getRequestBody')
+                ->will($this->returnValue($contentBody));
+        }
+
+        $request
+            ->expects($this->any())
+            ->method('getQueryParams')
+            ->will($this->returnValue($queryParams));
+
+        $request
+            ->expects($this->any())
+            ->method('getHeaders')
+            ->will($this->returnValue($headers));
+
+        return $request;
+    }
+
+    /**
+     * Generate a mock \Sonno\Configuration\Configuration object.
+     *
+     * @return Sonno\Configuration\Configuration
+     */
+    protected function buildMockConfiguration(
+        $routeOptions = array(),
+        $baseUri = null
+    ) {
+        $config = $this
+            ->getMockBuilder('Sonno\Configuration\Configuration')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $routes = array();
+        foreach ($routeOptions as $routeOption) {
+            $route = $this
+                ->getMockBuilder('Sonno\Configuration\Route')
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            // setup method expectations on this Route for each route option
+            foreach ($routeOption as $key => $value) {
+                $methodName = 'get' . ucfirst($key);
+                $route
+                    ->expects($this->any())
+                    ->method($methodName)
+                    ->will($this->returnValue($value));
+            }
+
+            $routes[] = $route;
+        }
+
+        $config
+            ->expects($this->any())
+            ->method('getRoutes')
+            ->will($this->returnValue($routes));
+
+        if ($baseUri) {
+            $config
+                ->expects($this->any())
+                ->method('getBasePath')
+                ->will($this->returnValue($baseUri));
+        }
+
+        return $config;
+    }
+
+    /**
      * Test that a 404 Not Found response is produced when a resource class
      * cannot be located to service the request.
      *
@@ -35,7 +182,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest();
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(404, $response->getStatusCode());
     }
@@ -53,7 +200,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest();
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(404, $response->getStatusCode());
     }
@@ -72,7 +219,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest('POST', '/test/123');
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(405, $response->getStatusCode());
     }
@@ -95,7 +242,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest('GET', '/test/123');
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(406, $response->getStatusCode());
     }
@@ -117,7 +264,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $request = $this->buildMockRequest('GET', '/service/v1/test/123');
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         // expect a 406 here because the request cannot be satisfied due to
         // unacceptable content characteristics (but does match resource based
@@ -181,7 +328,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('random response content', $response->getContent());
@@ -215,7 +362,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('blue', $response->getContent());
@@ -250,7 +397,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
@@ -277,6 +424,32 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      */
     public function testFormParam()
     {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test/paper',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'modifyString',
+                'produces'           => array('text/plain'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
+                'formParams'         => array('str'),
+                'queryParams'        => array('op'))
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/test/paper',
+            null,
+            new Variant('text/plain'),
+            array('op' => 'upper'),
+            array(),
+            'str=hackeysackey'
+        );
+
+        $app = new Application($config);
+        $response = $app->run($request);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("HACKEYSACKEY|GET", $response->getContent());
     }
 
     /**
@@ -288,6 +461,31 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      */
     public function testHeaderParam()
     {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test/{str}',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'modifyString',
+                'produces'           => array('text/plain'),
+                'contexts'           => array('_incomingRequest' => 'Request'),
+                'headerParams'       => array('str'),
+                'queryParams'        => array('op'))
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/test/camelCase',
+            null,
+            new Variant('text/plain'),
+            array('op' => 'upper'),
+            array('str' => 'Cat')
+        );
+
+        $app = new Application($config);
+        $response = $app->run($request);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("CAT|GET", $response->getContent());
     }
 
     /**
@@ -319,7 +517,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
@@ -354,171 +552,143 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("CAMELCASE|GET", $response->getContent());
     }
 
     /**
-     * Test a custom resource creator function.
+     * Test a {@link Sonno\Application\WebApplicationException} being thrown
+     * by a resource class method.
      *
      * @return void
      */
-    public function testCustomResourceInstantiator()
+    public function testThrownWebApplicationException()
     {
-        $config  = $this->buildMockConfiguration(array(
+        $config = $this->buildMockConfiguration(array(
             array(
-                'path'               => '/test/{str}',
+                'path'               => '/test',
                 'httpMethod'         => 'GET',
                 'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'randomResponse',
+                'resourceMethodName' => 'causeError',
                 'produces'           => array('text/plain'),
                 'contexts'           => array(), // do not inject context
-                'pathParams'         => array('str'),
-                'queryParams'        => array('op'))
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
         ), '/service/v1');
         $request = $this->buildMockRequest(
             'GET',
-            '/service/v1/test/camelCase',
+            '/service/v1/test',
             null,
-            new Variant('text/plain'),
-            array('op' => 'upper')
+            new Variant('text/plain')
         );
 
         $app = new Application($config);
-        $app->setResourceCreationFunction(function($className) {
-            return new $className('constructor argument 0');
-        });
-        $response = @$app->run($request);
+        $response = $app->run($request);
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("constructor argument 0", $response->getContent());
+        $this->assertEquals(405, $response->getStatusCode());
     }
 
-    /**
-     * Setup a text fixture.
-     * Set the Response content output stream to the abyss.
-     *
-     * @return void
-     */
-    protected function setUp()
+    public function testResponseFilterCallback()
     {
-        \Sonno\Http\Response\Response::setContentOutputStream('php://temp');
+        $config = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'causeError',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/nonexistent'
+        );
+
+        $app = new Application($config);
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setHeaders(array('Content-Type' => 'text/plain'));
+        });
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setContent('Sorry, but that resource does not exist');
+        });
+        $response = $app->run($request);
+
+        $this->assertEquals('text/plain', $response->getHeader('Content-Type'));
+        $this->assertEquals('Sorry, but that resource does not exist', $response->getContent());
     }
 
-    /**
-     * Generate a mock \Sonno\Http\Request\RequestInterface object.
-     *
-     * @param $method string The HTTP request method.
-     * @param $uri    string The HTTP request URI.
-     * @return \Sonno\Http\Request\RequestInterface
-     */
-    protected function buildMockRequest(
-        $method = null,
-        $uri = null,
-        $contentType = null,
-        $selectedVariant = null,
-        $queryParams = array()
-    ) {
-        $request = $this
-            ->getMockBuilder('Sonno\Http\Request\Request')
-            ->disableOriginalConstructor()
-            ->getMock();
+    public function testUnregisterSpecificFilterCallback()
+    {
+        $config = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'causeError',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/nonexistent'
+        );
 
-        if ($uri) {
-            $request
-                ->expects($this->any())
-                ->method('getRequestUri')
-                ->will($this->returnValue($uri));
-        }
+        $app = new Application($config);
 
-        if ($method) {
-            $request
-                ->expects($this->any())
-                ->method('getMethod')
-                ->will($this->returnValue($method));
-        }
+        $tmpCallback = function($request, $response) {
+            $response->setHeaders(array('Content-Type' => 'text/html'));
+        };
+        $app->registerResponseFilter(404, $tmpCallback);
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setContent('Sorry, but that resource does not exist');
+        });
+        $app->unregisterResponseFilter(404, $tmpCallback);
 
-        if ($contentType) {
-            $request
-                ->expects($this->any())
-                ->method('getContentType')
-                ->will($this->returnValue($contentType));
-        }
+        $response = $app->run($request);
 
-        if (null == $selectedVariant) {
-            $request
-                ->expects($this->any())
-                ->method('selectVariant')
-                ->will($this->returnValue(null));
-        } else {
-            $request
-                ->expects($this->any())
-                ->method('selectVariant')
-                ->will($this->returnCallback(function(array $arr) {
-                    if(!count($arr))
-                        return null;
-                    else {
-                        $keys = array_keys($arr);
-                        return $arr[$keys[0]];
-                    }
-                }));
-        }
-
-        $request
-            ->expects($this->any())
-            ->method('getQueryParams')
-            ->will($this->returnValue($queryParams));
-
-        return $request;
+        $this->assertEquals('Sorry, but that resource does not exist', $response->getContent());
     }
 
-    /**
-     * Generate a mock \Sonno\Configuration\Configuration object.
-     *
-     * @return \Sonno\Configuration\Configuration
-     */
-    protected function buildMockConfiguration(
-        $routeOptions = array(),
-        $baseUri = null
-    ) {
-        $config = $this
-            ->getMockBuilder('Sonno\Configuration\Configuration')
-            ->disableOriginalConstructor()
-            ->getMock();
+    public function testUnregisterAllFilterCallbacks()
+    {
+        $config = $this->buildMockConfiguration(array(
+            array(
+                'path'               => '/test',
+                'httpMethod'         => 'GET',
+                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'causeError',
+                'produces'           => array('text/plain'),
+                'contexts'           => array(), // do not inject context
+                'pathParams'         => array(),
+                'queryParams'        => array()
+            )
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'GET',
+            '/service/v1/nonexistent'
+        );
 
-        $routes = array();
-        foreach ($routeOptions as $routeOption) {
-            $route = $this
-                ->getMockBuilder('Sonno\Configuration\Route')
-                ->disableOriginalConstructor()
-                ->getMock();
+        $app = new Application($config);
 
-            // setup method expectations on this Route for each route option
-            foreach ($routeOption as $key => $value) {
-                $methodName = 'get' . ucfirst($key);
-                $route
-                    ->expects($this->any())
-                    ->method($methodName)
-                    ->will($this->returnValue($value));
-            }
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setHeaders(array('Content-Type' => 'text/html'));
+        });
+        $app->registerResponseFilter(404, function($request, $response) {
+            $response->setContent('Sorry, but that resource does not exist');
+        });
+        $app->unregisterResponseFilter(404);
 
-            $routes[] = $route;
-        }
+        $response = $app->run($request);
 
-        $config
-            ->expects($this->any())
-            ->method('getRoutes')
-            ->will($this->returnValue($routes));
-
-        if ($baseUri) {
-            $config
-                ->expects($this->any())
-                ->method('getBasePath')
-                ->will($this->returnValue($baseUri));
-        }
-
-        return $config;
+        $this->assertNull($response->getContent());
     }
 }

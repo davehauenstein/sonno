@@ -41,14 +41,14 @@ class AnnotationDriver implements DriverInterface
     /**
      * A local instance of a Configuration object.
      *
-     * @var \Sonno\Configuration\Configuration
+     * @var Sonno\Configuration\Configuration
      */
     protected $_config;
 
     /**
      * A local instance of an Annotation Reader object.
      *
-     * @var \Sonno\Annotation\Reader\ReaderInterface
+     * @var Sonno\Annotation\Reader\ReaderInterface
      */
     protected $_reader;
 
@@ -76,7 +76,7 @@ class AnnotationDriver implements DriverInterface
      * Setter for configuration object.
      *
      * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\AnnotationDriver Implements fluent
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setConfig(Configuration $config)
@@ -102,7 +102,7 @@ class AnnotationDriver implements DriverInterface
      * Setter for annotation reader object.
      *
      * @param  Sonno\Annotation\Reader\ReaderInterface $reader
-     * @return Sonno\Configuration\AnnotationDriver Implements fluent
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setReader(ReaderInterface $reader)
@@ -159,39 +159,34 @@ class AnnotationDriver implements DriverInterface
      */
     public function parseConfig()
     {
-        if (!($reader = $this->getReader())) {
+        if (!$this->_reader) {
             throw new DriverException(
                 'Could not parse annotation configuration because
                  no annotation reader object has been set.'
             );
         }
 
-        $resources = $this->getAnnotatedResources();
-        $config    = $this->getConfig();
+        $config = $this->getConfig();
 
-        foreach ($resources as $resourceClass) {
+        foreach ($this->_annotatedResources as $resourceClass) {
             $class       = new ReflectionClass($resourceClass);
-            $params      = $this->_extractClassParams($class, $reader);
+            $classParams = $this->_extractClassParams($class);
 
             $properties = $class->getProperties();
-            $params = array();
             foreach ($properties as $property) {
-                // Class and property params don't overlap, just merge.
-                $params = array_merge(
-                    $params,
-                    $this->_extractPropertyParams($property, $reader)
+                $classParams = array_merge_recursive(
+                    $classParams,
+                    $this->_extractPropertyParams($property)
                 );
             }
 
             $methods = $class->getMethods();
             foreach ($methods as $method) {
-                // Class and method params don't overlap either, just merge.
-                $params = array_merge(
-                    $params,
-                    $this->_extractMethodParams($method, $reader)
-                );
-                if(false !== $params) {
-                    $config->addRoute(new Route($params));
+                $methodParams = $this->_extractMethodParams($method);
+
+                if (false !== $methodParams) {
+                    $routeParams = array_merge($classParams, $methodParams);
+                    $config->addRoute(new Route($routeParams));
                 }
             }
         }
@@ -203,23 +198,36 @@ class AnnotationDriver implements DriverInterface
      * Return a list of Route parameters based on class annotations.
      *
      * @param  ReflectionClass $class
-     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
      * @return array Class annotations.
      */
-    protected function _extractClassParams(
-        ReflectionClass $class,
-        ReaderInterface $reader
-    )
+    protected function _extractClassParams(ReflectionClass $class)
     {
         $params = array('resourceClassName' => $class->getName());
 
-        if ($annot = $reader->getClassAnnotation($class, '\Sonno\Annotation\Path')) {
+        // Examine Annotation: @Path
+        $annot = $this->_reader->getClassAnnotation(
+            $class,
+            '\Sonno\Annotation\Path'
+        );
+        if ($annot) {
             $params['classPath'] = $annot->getPath();
         }
-        if ($annot = $reader->getClassAnnotation($class, '\Sonno\Annotation\Consumes')) {
+
+        // Examine Annotation: @Consumes
+        $annot = $this->_reader->getClassAnnotation(
+            $class,
+            '\Sonno\Annotation\Consumes'
+        );
+        if ($annot) {
             $params['consumes'] = $annot->getMediaTypes();
         }
-        if ($annot = $reader->getClassAnnotation($class, '\Sonno\Annotation\Produces')) {
+
+        // Examine Annotation: @Produces
+        $annot = $this->_reader->getClassAnnotation(
+            $class,
+            '\Sonno\Annotation\Produces'
+        );
+        if ($annot) {
             $params['produces'] = $annot->getMediaTypes();
         }
 
@@ -230,44 +238,92 @@ class AnnotationDriver implements DriverInterface
      * Return a list of Route parameters based on method annotations.
      *
      * @param  ReflectionMethod $method
-     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
      * @return array Method annotations.
      */
-    protected function _extractMethodParams(
-        ReflectionMethod $method,
-        ReaderInterface $reader
-    )
+    protected function _extractMethodParams(ReflectionMethod $method)
     {
         $params = array('resourceMethodName' => $method->getName());
 
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HttpMethod')) {
+        // Examine Annotation: @{HTTP_VERB}
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\HttpMethod'
+        );
+        if ($annot) {
             $params['httpMethod'] = (string) $annot;
         } else {
             return false;
         }
 
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Path')) {
+        // Examine Annotation: @Path
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\Path'
+        );
+        if ($annot) {
             $params['methodPath'] = $annot->getPath();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Consumes')) {
+
+        // Examine Annotation: @Consumes
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\Consumes'
+        );
+        if ($annot) {
             $params['consumes'] = $annot->getMediaTypes();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\Produces')) {
+
+        // Examine Annotation: @Produces
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\Produces'
+        );
+        if ($annot) {
             $params['produces'] = $annot->getMediaTypes();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\PathParam')) {
+
+        // Examine Annotation: @PathParam
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\PathParam'
+        );
+        if ($annot) {
             $params['pathParams'] = $annot->getParams();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\CookieParam')) {
+
+        // Examine Annotation: @CookieParam
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\CookieParam'
+        );
+        if ($annot) {
             $params['cookieParams'] = $annot->getParams();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\FormParam')) {
+
+        // Examine Annotation: @FormParam
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\FormParam'
+        );
+        if ($annot) {
             $params['formParams'] = $annot->getParams();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\HeaderParam')) {
+
+        // Examine Annotation: @HeaderParam
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\HeaderParam'
+        );
+        if ($annot) {
             $params['headerParams'] = $annot->getParams();
         }
-        if ($annot = $reader->getMethodAnnotation($method, '\Sonno\Annotation\QueryParam')) {
+
+        // Examine Annotation: @QueryParam
+        $annot = $this->_reader->getMethodAnnotation(
+            $method,
+            '\Sonno\Annotation\QueryParam'
+        );
+        if ($annot) {
             $params['queryParam'] = $annot->getParams();
         }
 
@@ -278,20 +334,23 @@ class AnnotationDriver implements DriverInterface
      * Return a list of Route parameters based on property annotations.
      *
      * @param ReflectionProperty $property
-     * @param Sonno\Annotation\Reader\ReaderInterface $reader
      * @return array Property annotations.
      */
-    public function _extractPropertyParams(
-        ReflectionProperty $property,
-        ReaderInterface $reader
-    )
+    public function _extractPropertyParams(ReflectionProperty $property)
     {
         $params = array();
-        if ($annot = $reader->getPropertyAnnotation($property, '\Sonno\Annotation\Context')) {
+
+        // Examine Annotation: @Context
+        $annot = $this->_reader->getPropertyAnnotation(
+            $property,
+            '\Sonno\Annotation\Context'
+        );
+        if ($annot) {
             $params['contexts'] = array(
                 $property->getName() => $annot->getContext()
             );
         }
+
         return $params;
     }
 }

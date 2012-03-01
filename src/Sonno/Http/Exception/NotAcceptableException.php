@@ -12,7 +12,7 @@
 
 namespace Sonno\Http\Exception;
 
-use \Exception;
+use Sonno\Application\WebApplicationException;
 
 /**
  * An exception that occurs when a resource class has been located, but cannot
@@ -22,6 +22,10 @@ use \Exception;
  * @package    Sonno\Http\Exception
  * @author     Tharsan Bhuvanendran <me@tharsan.com>
  */
-class NotAcceptableException extends Exception
+class NotAcceptableException extends WebApplicationException
 {
+    public function __construct()
+    {
+        parent::__construct(406);
+    }
 }

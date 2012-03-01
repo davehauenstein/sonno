@@ -17,12 +17,11 @@ use ReflectionClass,
     ReflectionProperty,
     Sonno\Configuration\Configuration,
     Sonno\Configuration\Route,
+    Sonno\Http\Exception\NotAcceptableException,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
-    Sonno\Http\Exception\NotFoundException,
-    Sonno\Http\Exception\MethodNotAllowedException,
-    Sonno\Http\Exception\UnsupportedMediaTypeException,
     Sonno\Http\Variant,
+    Sonno\Dispatcher\Dispatcher,
     Sonno\Router\Router,
     Sonno\Uri\UriInfo;
 
@@ -46,18 +45,17 @@ class Application
     protected $_config;
 
     /**
-     * A function callback responsible for the instantiation of a resource
-     * class.
+     * A registry of filters that may perform additional processing on a
+     * {@link Sonno\Response\Response} before it is delivered.
      *
-     * @var callback
+     * @var array
      */
-    protected $_resourceCreationFunction;
+    protected $_responseFilters;
 
     /**
      * Construct a new Application.
      *
-     * @param Sonno\Configuration\Configuration $config Resource
-     *                                                  configuration data.
+     * @param Sonno\Configuration\Configuration $config Resource configuration.
      */
     public function __construct(Configuration $config)
     {
@@ -82,17 +80,13 @@ class Application
      * Setter for configuration object.
      *
      * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\AnnotationDriver Implements fluent interface.
+     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
+    *       interface.
      */
     public function setConfig(Configuration $config)
     {
         $this->_config = $config;
         return $this;
-    }
-
-    public function setResourceCreationFunction($resourceCreationFunction)
-    {
-        $this->_resourceCreationFunction = $resourceCreationFunction;
     }
 
     /**
@@ -108,64 +102,46 @@ class Application
      */
     public function run(RequestInterface $request)
     {
-        // attempt to find routes that match the current request
-        $pathParams  = array();
-        $router      = new Router($this->_config);
+        $result = NULL;
+
         try {
+            // attempt to find routes that match the current request
+            $router = new Router($this->_config);
             $routes = $router->match($request, $pathParams);
-        } catch(NotFoundException $e) {
-            $response = new Response(404);
-            $response->sendResponse();
-            return $response;
-        } catch(MethodNotAllowedException $e) {
-            $response = new Response(405);
-            $response->sendResponse();
-            return $response;
-        } catch(UnsupportedMediaTypeException $e) {
-            $response = new Response(415);
-            $response->sendResponse();
-            return $response;
-        }
 
-        // construct a hash map of Variants based on Routes
-        $variantMap = array(); // variant hash => <Sonno\Http\Variant>
-        $variants   = array(); // array<Sonno\Http\Variant>
-        foreach ($routes as $route) {
-            $routeProduces = $route->getProduces();
-            foreach ($routeProduces as $produces) {
-                $variant = new Variant(null, null, $produces);
-                $variantHash = spl_object_hash($variant);
-                $variantMap[$variantHash] = $route;
-                $variants[] = $variant;
+            // construct a hash map of Variants based on Routes
+            $variantMap = array(); // variant hash => <Sonno\Http\Variant>
+            $variants   = array(); // array<Sonno\Http\Variant>
+            foreach ($routes as $route) {
+                $routeProduces = $route->getProduces();
+                foreach ($routeProduces as $produces) {
+                    $variant = new Variant(null, null, $produces);
+                    $variantHash = spl_object_hash($variant);
+                    $variantMap[$variantHash] = $route;
+                    $variants[] = $variant;
+                }
             }
+
+            // select a Variant and find the corresponding route
+            $selectedVariant = $request->selectVariant($variants);
+            if (null == $selectedVariant) {
+                throw new NotAcceptableException;
+            }
+
+            $selectedVariantHash = spl_object_hash($selectedVariant);
+            $selectedRoute = $variantMap[$selectedVariantHash];
+
+            // maintain URI information for resource class context injection
+            $uriInfo = new UriInfo($this->_config, $request, $selectedRoute);
+            $uriInfo->setPathParameters($pathParams);
+            $uriInfo->setQueryParameters($request->getQueryParams());
+
+            // execute the resource class method and obtain the result
+            $dispatcher = new Dispatcher($request, $uriInfo);
+            $result = $dispatcher->dispatch($selectedRoute);
+        } catch(WebApplicationException $e) {
+            $result = $e->getResponse();
         }
-
-        // select a Variant and find the corresponding route
-        $selectedVariant = $request->selectVariant($variants);
-        if (null == $selectedVariant) {
-            $response = new Response(406);
-            $response->sendResponse();
-            return $response;
-        }
-        $selectedVariantHash = spl_object_hash($selectedVariant);
-        $selectedRoute = $variantMap[$selectedVariantHash];
-
-        // maintain URI information for resource class context injection
-        $uriInfo = new UriInfo($this->_config, $request, $selectedRoute);
-        $uriInfo->setPathParameters($pathParams);
-        $uriInfo->setQueryParameters($request->getQueryParams());
-
-        // execute the resource class method and obtain the result
-        $result = $this->_executeResource(
-            $selectedRoute->getResourceClassName(),
-            $selectedRoute->getResourceMethodName(),
-            $selectedRoute,
-            $uriInfo,
-            array(
-                'Request' => $request,
-                'UriInfo' => $uriInfo,
-            )
-        );
 
         // object is a scalar value: construct a new Response
         if (is_scalar($result)) {
@@ -174,120 +150,98 @@ class Application
                 $result,
                 array('Content-Type' => $selectedVariant->getMediaType())
             );
-            $response->sendResponse();
-            return $response;
 
         // object is already a Response
         } else if ($result instanceof Response) {
-            $result->sendResponse();
-            return $result;
+            $response = $result;
 
         // object implements the Renderable interface: construct a Response
         // using the reprsentation produced by render()
         } else if ($result instanceof Renderable) {
             $response = new Response(
                 200,
-                $result->render($selectedVariant->getMediaType()),
+                $result->render($selectedVariant),
                 array('Content-Type' => $selectedVariant->getMediaType())
             );
 
-            $response->sendResponse();
-            return $response;
-
         // cannot determine how to handle the object returned
         } else {
-            throw new MalformedResourceRepresentationException();
+            throw new MalformedResourceRepresentationException;
         }
+
+        // process any HTTP status filter callbacks
+        $statusCode = $response->getStatusCode();
+        if (isset($this->_responseFilters[$statusCode])) {
+            foreach ($this->_responseFilters[$statusCode] as $filterCallback) {
+                $filterCallback($request, $response);
+            }
+        }
+
+        $response->sendResponse();
+        return $response;
     }
 
     /**
-     * Create an instance of a resource class, execute a class method and
-     * return the result.
+     * Register a new response filter for a specific HTTP status code.
      *
-     * @param $className string The class name.
-     * @param $methodName string The class' method name.
-     * @param $route Sonno\Configuration\Route The matched route.
-     * @param $uriInfo Sonno\Uri\UriInfo Information about the URI.
-     * @param $contextInjections array A map of context variables that can be
-     *                                 injected into the resource class prior to
-     *                                 execution.
-     * @return mixed
+     * @param int $statusCode The HTTP status code to register a filter for.
+     * @param Callable $filterCallback The PHP callback to execute when the
+     *      HTTP error registered against occurs.
+     *
+     * @throws InvalidArgumentException
+     * @return Sonno\Application\Application Implements fluent interface.
      */
-    protected function _executeResource(
-        $className,
-        $methodName,
-        $route,
-        $uriInfo,
-        $contextInjections = array())
+    public function registerResponseFilter($statusCode, $filterCallback)
     {
-        // obtain Reflection objects for the resource method selected
-        $reflClass  = new ReflectionClass($className);
-        $reflMethod = $reflClass->getMethod($methodName);
-
-        // instantiate the selected resource class
-        $resource = $this->_createResourceInstance($className);
-
-        // construct a flat array of method arguments for the resource method
-        $pathParamValues     = $uriInfo->getPathParameters();
-        $queryParamValues    = $uriInfo->getQueryParameters();
-        $pathParams          = $route->getPathParams() ?: array();
-        $queryParams         = $route->getQueryParams() ?: array();
-        $resourceMethodArgs  = array();
-
-        foreach ($reflMethod->getParameters() as $idx => $reflParam) {
-            $parameterName = $reflParam->getName();
-
-            // search for an argument value in the Path parameter collection
-            if (in_array($parameterName, $pathParams)
-                && isset($pathParamValues[$parameterName])
-            ) {
-                $resourceMethodArgs[$idx] = $pathParamValues[$parameterName];
-            }
-
-            // search for an argument value in the Query parameter collection
-            if (in_array($parameterName, $queryParams)
-                && isset($queryParamValues[$parameterName])
-            ) {
-                $resourceMethodArgs[$idx] = $queryParamValues[$parameterName];
-            }
+        if (!is_callable($filterCallback)) {
+            throw new InvalidArgumentException(
+                'The Filter Callback must be callable as a PHP function.'
+            );
         }
 
-        // inject Context variables into the resource class instance
-        foreach ($route->getContexts() as $propertyName => $contextType) {
-            try {
-                $reflProperty = $reflClass->getProperty($propertyName);
-            } catch(\ReflectionException $e) {
-                continue;
-            }
+        if (isset($this->_responseFilters[$statusCode])) {
+            $this->_responseFilters[$statusCode][] = $filterCallback;
+        } else {
+            $this->_responseFilters[$statusCode] = array($filterCallback);
+        }
 
-            $reflProperty->setAccessible(true);
+        return $this;
+    }
 
-            if (isset($contextInjections[$contextType])) {
-                $reflProperty->setValue(
-                    $resource,
-                    $contextInjections[$contextType]
+    /**
+     * Unregister a single response filter callback, or all filter callbacks
+     * for a specific status code.
+     *
+     * @param int $statusCode The HTTP status code to register a filter for.
+     * @param Callable|null $filterCallback The PHP callback to remove from the
+     *      response filter set, or NULL to remove all filters from the
+     *      specified HTTP status code filter set.
+     *
+     * @return Sonno\Application\Application Implements fluent interface.
+     */
+    public function unregisterResponseFilter(
+        $statusCode,
+        $filterCallback = NULL
+    )
+    {
+        if (isset($this->_responseFilters[$statusCode])) {
+            // unregister all response filters for the specified status code
+            if (is_null($filterCallback)) {
+                unset($this->_responseFilters[$statusCode]);
+
+            // locate & remove the specified $filterCallback in the filter set
+            } else {
+                $key = array_search(
+                    $filterCallback,
+                    $this->_responseFilters[$statusCode]
                 );
+
+                if (false !== $key) {
+                    unset($this->_responseFilters[$statusCode][$key]);
+                }
             }
         }
 
-        // execute the selected resource method using the generated method
-        // arguments
-        return $reflMethod->invokeArgs($resource, $resourceMethodArgs);
-    }
-
-    /**
-     * Instantiate a named class, and return the instance.
-     * Uses the Application's custom resource creation function, if one is
-     * available.
-     * Otherwise, invokes the resource class' default constructor.
-     *
-     * @param $className string The name of the class to instantiate.
-     * @return object
-     */
-    protected function _createResourceInstance($className)
-    {
-        return is_callable($this->_resourceCreationFunction)
-            ? call_user_func($this->_resourceCreationFunction, $className)
-            : new $className;
+        return $this;
     }
 }

@@ -12,6 +12,8 @@
 
 namespace Sonno\Application;
 
+use Sonno\Http\Variant;
+
 /**
  * An interface to a class that produce a representation (render) itself.
  *
@@ -24,8 +26,21 @@ interface Renderable
     /**
      * Create a representation of this object in the given media type.
      *
-     * @param $mediaType The media (MIME) type to produce a representation in.
+     * @param Variant $mediaType The media (MIME) type to produce a
+     *                           representation in.
+     *
      * @return mixed A scalar value.
      */
-    public function render($mediaType);
+    public function render(Variant $mediaType);
+
+    /**
+     * Create a PHP object from a rendered representation.
+     *
+     * @param mixed   $representation The rendered representation.
+     * @param Variant $mediaType      The media (MIME) type of the supplied
+     *                                representation.
+     *
+     * @return object
+     */
+    public function unrender($representation, Variant $mediaType);
 }
