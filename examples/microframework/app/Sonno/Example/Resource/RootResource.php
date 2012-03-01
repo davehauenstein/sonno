@@ -25,6 +25,7 @@ use Sonno\Http\Response\Response,
     Sonno\Annotation\Context,
     Sonno\Annotation\Produces,
     Sonno\Annotation\Consumes,
+    Sonno\Annotation\FormParam,
     Sonno\Annotation\PathParam,
     Twig_Autoloader,
     Twig_Environment,
@@ -126,9 +127,9 @@ class RootResource
      * @Path("/contact")
      * @Consumes({"application/x-www-form-urlencoded"})
      * @Produces({"text/plain"})
+     * @FormParam("fullname")
      */
-    public function contactsubmit() {
-        parse_str($this->_request->getRequestBody(), $req);
-        return 'Thanks for sending us your input, ' . $req['fullname'] . '!';
+    public function contactsubmit($fullname) {
+        return "Thanks for sending us your input, $fullname!";
     }
 }
