@@ -160,7 +160,7 @@ class Application
         } else if ($result instanceof Renderable) {
             $response = new Response(
                 200,
-                $result->render($selectedVariant->getMediaType()),
+                $result->render($selectedVariant),
                 array('Content-Type' => $selectedVariant->getMediaType())
             );
 
@@ -177,6 +177,7 @@ class Application
             }
         }
 
+        $response->sendResponse();
         return $response;
     }
 

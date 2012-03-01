@@ -26,7 +26,8 @@ interface Renderable
     /**
      * Create a representation of this object in the given media type.
      *
-     * @param Variant $mediaType The media (MIME) type to produce a representation in.
+     * @param Variant $mediaType The media (MIME) type to produce a
+     *                           representation in.
      *
      * @return mixed A scalar value.
      */
@@ -36,7 +37,8 @@ interface Renderable
      * Create a PHP object from a rendered representation.
      *
      * @param mixed   $representation The rendered representation.
-     * @param Variant $mediaType      The media (MIME) type of the supplied representation.
+     * @param Variant $mediaType      The media (MIME) type of the supplied
+     *                                representation.
      *
      * @return object
      */

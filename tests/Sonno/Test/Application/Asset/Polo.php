@@ -9,7 +9,8 @@
 
 namespace Sonno\Test\Application\Asset;
 
-use Sonno\Application\Renderable;
+use Sonno\Application\Renderable,
+    Sonno\Http\Variant;
 
 /**
  * @category Sonno
@@ -29,8 +30,12 @@ class Polo implements Renderable
     {
     }
 
-    public function render($mediaType)
+    public function render(Variant $mediaType)
     {
         return $this->colour;
+    }
+
+    public function unrender($representation, Variant $mediaType)
+    {
     }
 }

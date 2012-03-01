@@ -258,7 +258,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $route
             ->expects($this->any())
             ->method('getPath')
-            ->will($this->returnValue('/users/{id: \d+}'));
+            ->will($this->returnValue('/users/user-{id: \d+}'));
         $route
             ->expects($this->any())
             ->method('getHttpMethod')
@@ -273,7 +273,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             ->method('getRoutes')
             ->will($this->returnValue(array($route)));
 
-        $request = $this->buildMockRequest('GET', '/users/1234');
+        $request = $this->buildMockRequest('GET', '/users/user-1234');
 
         $router = new Router($config);
 
@@ -283,6 +283,52 @@ class RouterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, count($params));
         $this->assertArrayHasKey('id', $params);
         $this->assertEquals("1234", $params['id']);
+    }
+
+    /**
+     * Test matching two paths that match, with a RegExp-constrained Path
+     * parameter.
+     *
+     * @return void
+     */
+    public function testSuccessfulPathMatchWithMultipleConstrainedParameters()
+    {
+        $route = $this
+            ->getMockBuilder('Sonno\Configuration\Route')
+            ->disableOriginalConstructor()
+            ->getMock();
+        $route
+            ->expects($this->any())
+            ->method('getPath')
+            ->will($this->returnValue('/test{type: [A-Z][0-9]+}_{user_type: new|old}/id-{id: \d+}'));
+        $route
+            ->expects($this->any())
+            ->method('getHttpMethod')
+            ->will($this->returnValue('GET'));
+
+        $config = $this
+            ->getMockBuilder('Sonno\Configuration\Configuration')
+            ->disableOriginalConstructor()
+            ->getMock();
+        $config
+            ->expects($this->any())
+            ->method('getRoutes')
+            ->will($this->returnValue(array($route)));
+
+        $request = $this->buildMockRequest('GET', '/testX11_new/id-32002');
+
+        $router = new Router($config);
+
+        $matches = $router->match($request, $params);
+
+        $this->assertEquals(1, count($matches));
+        $this->assertEquals(3, count($params));
+        $this->assertArrayHasKey('type', $params);
+        $this->assertArrayHasKey('user_type', $params);
+        $this->assertArrayHasKey('id', $params);
+        $this->assertEquals("X11", $params['type']);
+        $this->assertEquals("new", $params['user_type']);
+        $this->assertEquals("32002", $params['id']);
     }
 
     /**
