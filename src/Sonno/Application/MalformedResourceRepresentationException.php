@@ -12,8 +12,6 @@
 
 namespace Sonno\Application;
 
-use \Exception;
-
 /**
  * An exception that occurs when a resource class produces a representation that
  * cannot be understood.
@@ -22,6 +20,6 @@ use \Exception;
  * @package    Sonno\Application
  * @author     Tharsan Bhuvanendran <me@tharsan.com>
  */
-class MalformedResourceRepresentationException extends Exception
+class MalformedResourceRepresentationException extends \Exception
 {
 }

@@ -1,0 +1,28 @@
+body {
+    font-family: Helvetica, Arial, sans;
+    font-size: 12px;
+}
+
+form {
+    width: 400px;
+}
+
+form label {
+    width: 125px;
+    float: left;
+    clear: left;
+    font-weight: bold;
+    color: #999;
+}
+
+form input {
+    float: left;
+}
+
+form input[type=submit] {
+    margin-left: 125px;
+}
+
+footer {
+    clear: both;
+}

@@ -270,7 +270,7 @@ class Route
      * Setter for _classPath property. Will trim trailing forward slash '/'
      * and ensure a forward slash '/' exists at the beginning of the string.
      *
-     * @param $path string Value for $_path property.
+     * @param $path string Value for $_classPath property.
      * @return \Sonno\Configuration\Route Implements fluent interface.
      */
     protected function _setClassPath($path)
@@ -283,7 +283,7 @@ class Route
      * Setter for _methodPath property. Will trim trailing forward slash '/'
      * and ensure a forward slash '/' exists at the beginning of the string.
      *
-     * @param $path string Value for $_path property.
+     * @param $path string Value for $_methodPath property.
      * @return \Sonno\Configuration\Route Implements fluent interface.
      */
     protected function _setMethodPath($path)

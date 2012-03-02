@@ -15,7 +15,7 @@ namespace Sonno\Router;
 use Sonno\Http\Request\RequestInterface,
     Sonno\Http\Exception\NotFoundException,
     Sonno\Http\Exception\MethodNotAllowedException,
-    Sonno\Http\Exception\UnsupportedMediaTypeException,
+    Sonno\Http\Exception\NotAcceptableException,
     Sonno\Configuration\Configuration,
     InvalidArgumentException;
 
@@ -37,6 +37,8 @@ class Router
      * @var \Sonno\Configuration\Configuration
      */
     protected $_config;
+
+    protected $_errorFilters;
 
     /**
      * Construct a new Application.
@@ -115,9 +117,9 @@ class Router
 
         // locate matching routes using the incoming request path
         foreach ($allRoutes as $route) {
-            $returnPath = $this->_matchPath($requestPath, $route->getPath());
-            if (false !== $returnPath) {
-                $pathParameters = $returnPath;
+            $params = $this->_matchPath($requestPath, $route->getPath());
+            if (false !== $params) {
+                $pathParameters = $params;
                 $candidateRoutes[] = $route;
             }
         }
@@ -155,7 +157,7 @@ class Router
         }
 
         if (empty($candidateRoutes)) {
-            throw new UnsupportedMediaTypeException;
+            throw new NotAcceptableException;
         }
 
         return $candidateRoutes;
@@ -173,6 +175,7 @@ class Router
      *
      * @param string $concrete The concrete path (no variables)
      * @param string $template The template path (optional variables)
+     *
      * @return array|boolean false if the paths don't match.
      */
     protected function _matchPath($concrete, $template)
@@ -185,34 +188,64 @@ class Router
             return false;
         }
 
-        $pathParams = array();
+        $pathParamNames  = array();
+        $pathParamValues = array();
         foreach ($templateSegments as $i => $templateSegment) {
             $concreteSegment = $concreteSegments[$i];
 
             if ($concreteSegment == $templateSegment) {
                 continue;
-            } else if (preg_match('/{(.+)}/', $templateSegment, $tmplMatches)) {
-                // template segment is a variable
-                $varName = $tmplMatches[1];
-
-                if (strstr($varName, ':')) {
-                    // template varible value must match a regular expression
-                    list($varName, $regexpConstraint) = explode(':', $varName);
-                    $regexpConstraint = trim($regexpConstraint);
-                    if (!preg_match("/$regexpConstraint/", $concreteSegment)) {
-                        return false;
-                    } else {
-                        $pathParams[$varName] = $concreteSegment;
-                    }
-                } else {
-                    $pathParams[$varName] = $concreteSegment;
-                }
-            } else {
-                return false;
             }
+
+            // rewrite the template segment into a regular expression
+            $reSegment = preg_replace_callback(
+                '/({[^}]+})/',
+                function($matches) use (&$pathParamNames) {
+                    // extract only the inside of the curly braces
+                    $varName = substr($matches[0], 1, strlen($matches[0])-2);
+
+                    // find the parameter regex constraint, if supplied
+                    @list($varName, $reConstraint) = explode(':', $varName);
+
+                    // remember the parameter name, in order of discovery
+                    $pathParamNames[] = $varName;
+
+                    // replace the {parameter} token with a regular expression
+                    if ($reConstraint) {
+                        return '(' . trim($reConstraint) . ')';
+                    } else {
+                        return '([^\)]+)';
+                    }
+                },
+                $templateSegment
+            );
+
+            // match the constructed regular expression against the concrete
+            // segment being tested to populate parameter values
+            if (preg_match_all("/^$reSegment$/", $concreteSegment, $matches)) {
+                foreach (array_splice($matches, 1) as $match) {
+                    $pathParamValues[] = $match[0];
+                }
+
+                continue;
+            }
+
+            // this segment failed to match either directly or via regexp match
+            return false;
         }
 
-        return $pathParams;
+        // ensure that a parameter value was found for each parameter name
+        // discovered
+        if (count($pathParamNames) == count($pathParamValues)) {
+            if (count($pathParamNames) == 0) {
+                return true;
+            }
+
+            // map parameter names to values
+            return array_combine($pathParamNames, $pathParamValues);
+        }
+
+        return false;
     }
 }
 
