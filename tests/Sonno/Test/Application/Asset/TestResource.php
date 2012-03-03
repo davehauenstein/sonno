@@ -58,4 +58,10 @@ class TestResource
     {
         throw new \Sonno\Http\Exception\MethodNotAllowedException;
     }
+
+    public function createPolo(Polo $polo)
+    {
+        $entity = '<polo><color>' . strtolower($polo->getColour()) . '</color></polo>';
+        return new Response(201, $entity, array('Content-Type' => 'application/xml'));
+    }
 }

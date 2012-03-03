@@ -370,6 +370,41 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that a resource class method whose first argument is a type that
+     * impelements Renderable will be passed an instance of that class
+     * generated from the request body.
+     */
+    public function testUnrenderedResourceMethodArgument()
+    {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path' => '/test/polo',
+                'httpMethod' => 'POST',
+                'resourceClassName' => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'createPolo',
+                'produces' => array('application/xml'),
+                'consumes' => array('application/json'),
+                'contexts' => array())
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'POST',
+            '/service/v1/test/polo',
+            'application/json',
+            new Variant(null, null, 'application/xml'),
+            array(),
+            array(),
+            json_encode(array('colour' => 'Magenta'))
+        );
+
+        $app = new Application($config);
+        $response = $app->run($request);
+
+        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertEquals('<polo><color>magenta</color></polo>', $response->getContent());
+        $this->assertEquals('application/xml', $response->getHeader('Content-Type'));
+    }
+
+    /**
      * Test a successful execution of Application::run() that correctly
      * processes the result of a resource method that returns a scalar value.
      *

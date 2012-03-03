@@ -13,8 +13,9 @@
 namespace Sonno\Dispatcher;
 
 use Sonno\Application\WebApplicationException,
-    Sonno\Http\Request\RequestInterface,
     Sonno\Configuration\Route,
+    Sonno\Http\Request\RequestInterface,
+    Sonno\Http\Variant,
     Sonno\Uri\UriInfo,
     ReflectionClass,
     ReflectionMethod;
@@ -155,6 +156,8 @@ class Dispatcher
         ReflectionMethod $method
     )
     {
+        $clsRenderable = 'Sonno\Application\Renderable';
+
         $pathParamValues     = $this->_uriInfo->getPathParameters();
         $queryParamValues    = $this->_uriInfo->getQueryParameters();
         $headerParamValues   = $this->_request->getHeaders();
@@ -168,6 +171,21 @@ class Dispatcher
 
         foreach ($method->getParameters() as $idx => $reflParam) {
             $parameterName = $reflParam->getName();
+            $parameterClass = $reflParam->getClass();
+
+            // if the parameter is a type that implements Renderable, use the
+            // implementation's unrender() function to generate an instance
+            // of the class from the request body as the parameter value
+            if (null !== $parameterClass
+                && $parameterClass->implementsInterface($clsRenderable)
+            ) {
+                $parameterClassName = $parameterClass->getName();
+                $parameterValue     = $parameterClassName::unrender(
+                    $this->_request->getRequestBody(),
+                    new Variant(null, null, $this->_request->getContentType())
+                );
+                $resourceMethodArgs[$idx] = $parameterValue;
+            }
 
             // search for an argument value in the Path parameter collection
             if (in_array($parameterName, $pathParams)
