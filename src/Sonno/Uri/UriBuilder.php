@@ -176,10 +176,10 @@ class UriBuilder
                 if ($resourceMethodName == $route->getResourceMethodName()) {
                     $this->path($route->getMethodPath());
                 }
+
+                return $this;
             }
         }
-
-        return $this;
     }
 
     /**
