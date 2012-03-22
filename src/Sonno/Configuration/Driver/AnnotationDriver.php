@@ -324,7 +324,7 @@ class AnnotationDriver implements DriverInterface
             '\Sonno\Annotation\QueryParam'
         );
         if ($annot) {
-            $params['queryParam'] = $annot->getParams();
+            $params['queryParams'] = $annot->getParams();
         }
 
         return $params;
