@@ -169,17 +169,24 @@ class UriBuilder
         $resourceClassName,
         $resourceMethodName = null)
     {
+        $foundClass = false;
+
         foreach ($this->_config->getRoutes() as $route) {
             if ($resourceClassName == $route->getResourceClassName()) {
-                $this->path($route->getClassPath());
+                if (!$foundClass) {
+                    $foundClass = true;
+                    $this->path($route->getClassPath());
+                }
 
                 if ($resourceMethodName == $route->getResourceMethodName()) {
                     $this->path($route->getMethodPath());
+                    return $this;
                 }
 
-                return $this;
             }
         }
+
+        return $this;
     }
 
     /**
