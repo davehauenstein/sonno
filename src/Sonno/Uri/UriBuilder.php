@@ -308,7 +308,9 @@ class UriBuilder
         $uri = $this->_concatUriComponents();
 
         foreach ($values as $varName => $varValue) {
-            $uri = str_replace("{{$varName}}", $varValue, $uri);
+            if (is_string($varValue)) {
+                $uri = str_replace("{{$varName}}", $varValue, $uri);
+            }
         }
 
         return $uri;
