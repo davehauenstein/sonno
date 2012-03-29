@@ -24,8 +24,15 @@ use Sonno\Application\WebApplicationException;
  */
 class MethodNotAllowedException extends WebApplicationException
 {
-    public function __construct()
+    /**
+     * @param array $allowedMethods HTTP methods that are allowed.
+     */
+    public function __construct(array $allowedMethods = array())
     {
         parent::__construct(405);
+
+        $this->_response->setHeaders(
+            array('Allow' => implode(', ', $allowedMethods))
+        );
     }
 }

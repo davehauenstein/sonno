@@ -130,14 +130,16 @@ class Router
 
         // filter candidate routes further by matching the incoming request
         // method
+        $allowedMethods = array();
         foreach ($candidateRoutes as $i => $route) {
             if ($route->getHttpMethod() != $requestMethod) {
+                $allowedMethods[] = $route->getHttpMethod();
                 unset($candidateRoutes[$i]);
             }
         }
 
         if (empty($candidateRoutes)) {
-            throw new MethodNotAllowedException;
+            throw new MethodNotAllowedException($allowedMethods);
         }
 
         // filter candidate routes further by matching the incoming media type
