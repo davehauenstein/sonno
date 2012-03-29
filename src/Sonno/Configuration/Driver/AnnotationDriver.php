@@ -207,7 +207,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Path
         $annot = $this->_reader->getClassAnnotation(
             $class,
-            '\Sonno\Annotation\Path'
+            'Sonno\Annotation\Path'
         );
         if ($annot) {
             $params['classPath'] = $annot->getPath();
@@ -216,7 +216,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Consumes
         $annot = $this->_reader->getClassAnnotation(
             $class,
-            '\Sonno\Annotation\Consumes'
+            'Sonno\Annotation\Consumes'
         );
         if ($annot) {
             $params['consumes'] = $annot->getMediaTypes();
@@ -225,7 +225,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Produces
         $annot = $this->_reader->getClassAnnotation(
             $class,
-            '\Sonno\Annotation\Produces'
+            'Sonno\Annotation\Produces'
         );
         if ($annot) {
             $params['produces'] = $annot->getMediaTypes();
@@ -247,7 +247,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @{HTTP_VERB}
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\HttpMethod'
+            'Sonno\Annotation\HttpMethod'
         );
         if ($annot) {
             $params['httpMethod'] = (string) $annot;
@@ -258,7 +258,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Path
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\Path'
+            'Sonno\Annotation\Path'
         );
         if ($annot) {
             $params['methodPath'] = $annot->getPath();
@@ -267,7 +267,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Consumes
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\Consumes'
+            'Sonno\Annotation\Consumes'
         );
         if ($annot) {
             $params['consumes'] = $annot->getMediaTypes();
@@ -276,7 +276,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Produces
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\Produces'
+            'Sonno\Annotation\Produces'
         );
         if ($annot) {
             $params['produces'] = $annot->getMediaTypes();
@@ -285,7 +285,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @PathParam
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\PathParam'
+            'Sonno\Annotation\PathParam'
         );
         if ($annot) {
             $params['pathParams'] = $annot->getParams();
@@ -294,7 +294,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @CookieParam
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\CookieParam'
+            'Sonno\Annotation\CookieParam'
         );
         if ($annot) {
             $params['cookieParams'] = $annot->getParams();
@@ -303,7 +303,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @FormParam
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\FormParam'
+            'Sonno\Annotation\FormParam'
         );
         if ($annot) {
             $params['formParams'] = $annot->getParams();
@@ -312,7 +312,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @HeaderParam
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\HeaderParam'
+            'Sonno\Annotation\HeaderParam'
         );
         if ($annot) {
             $params['headerParams'] = $annot->getParams();
@@ -321,7 +321,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @QueryParam
         $annot = $this->_reader->getMethodAnnotation(
             $method,
-            '\Sonno\Annotation\QueryParam'
+            'Sonno\Annotation\QueryParam'
         );
         if ($annot) {
             $params['queryParams'] = $annot->getParams();
@@ -343,7 +343,7 @@ class AnnotationDriver implements DriverInterface
         // Examine Annotation: @Context
         $annot = $this->_reader->getPropertyAnnotation(
             $property,
-            '\Sonno\Annotation\Context'
+            'Sonno\Annotation\Context'
         );
         if ($annot) {
             $params['contexts'] = array(
