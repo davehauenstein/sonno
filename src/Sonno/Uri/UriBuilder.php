@@ -169,13 +169,20 @@ class UriBuilder
         $resourceClassName,
         $resourceMethodName = null)
     {
+        $foundClass = false;
+
         foreach ($this->_config->getRoutes() as $route) {
             if ($resourceClassName == $route->getResourceClassName()) {
-                $this->path($route->getClassPath());
+                if (!$foundClass) {
+                    $foundClass = true;
+                    $this->path($route->getClassPath());
+                }
 
                 if ($resourceMethodName == $route->getResourceMethodName()) {
                     $this->path($route->getMethodPath());
+                    return $this;
                 }
+
             }
         }
 
@@ -272,7 +279,7 @@ class UriBuilder
         // perform URI template value substitution
         $countMatches = preg_match_all('/{([^}]*)}/', $uri, $matches);
         if ($countMatches > count($values)) {
-            throw new LengthException(
+            throw new \LengthException(
                 sprintf(
                     'Need %d URI template values, but only %d values supplied.',
                     $countMatches,
@@ -295,26 +302,14 @@ class UriBuilder
      * @param array $values An associative array of URI template parameter
      *                      values.
      * @return string
-     * @throws LengthException if there are any URI template parameters without
-     *                         a supplied value
      */
     public function buildFromMap(array $values = array())
     {
         $uri = $this->_concatUriComponents();
 
-        // perform URI template value substitution
-        $countMatches = preg_match_all('/{([^}]*)}/', $uri, $matches);
-        if ($countMatches > count($values)) {
-            throw new LengthException(
-                sprintf(
-                    'Need %d URI template values, but only %d values supplied.',
-                    $countMatches,
-                    count($values)
-                )
-            );
-        } else if ($countMatches == count($values)) {
-            foreach ($matches[0] as $idx => $varName) {
-                $uri = str_replace($varName, $values[$matches[1][$idx]], $uri);
+        foreach ($values as $varName => $varValue) {
+            if (is_string($varValue)) {
+                $uri = str_replace("{{$varName}}", $varValue, $uri);
             }
         }
 

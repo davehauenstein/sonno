@@ -26,6 +26,11 @@ class Polo implements Renderable
         $this->colour = $colour;
     }
 
+    public function getColour()
+    {
+        return $this->colour;
+    }
+
     public function slideOffSlowly()
     {
     }
@@ -35,7 +40,14 @@ class Polo implements Renderable
         return $this->colour;
     }
 
-    public function unrender($representation, Variant $mediaType)
+    public static function unrender($representation, Variant $mediaType)
     {
+        if ('application/json' == $mediaType->getMediaType())
+        {
+            $data = json_decode($representation);
+            return new static($data->colour);
+        }
+
+        return null;
     }
 }
