@@ -59,7 +59,7 @@ class Configuration
      */
     public function getBasePath()
     {
-        return $this->_basePath;
+        return $this->_basePath ?: '/';
     }
 
     /**

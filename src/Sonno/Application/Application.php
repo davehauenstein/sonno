@@ -145,11 +145,7 @@ class Application
 
         // object is a scalar value: construct a new Response
         if (is_scalar($result)) {
-            $response = new Response(
-                200,
-                $result,
-                array('Content-Type' => $selectedVariant->getMediaType())
-            );
+            $response = new Response(200, $result);
 
         // object is already a Response
         } else if ($result instanceof Response) {
@@ -158,15 +154,32 @@ class Application
         // object implements the Renderable interface: construct a Response
         // using the reprsentation produced by render()
         } else if ($result instanceof Renderable) {
-            $response = new Response(
-                200,
-                $result->render($selectedVariant),
-                array('Content-Type' => $selectedVariant->getMediaType())
-            );
+            $response = new Response(200, $result->render($selectedVariant));
 
         // cannot determine how to handle the object returned
         } else {
             throw new MalformedResourceRepresentationException;
+        }
+
+        // ensure a Content-Type header is present
+        if (!$response->hasHeader('Content-Type')
+            && $response->getStatusCode() < 300
+            && $response->getContent()
+        ) {
+            $response->setHeaders(
+                array(
+                    'Content-Type' => $selectedVariant->getMediaType()
+                )
+            );
+        }
+
+        // ensure a Content-Length header is present
+        if (!$response->hasHeader('Content-Length')) {
+            $response->setHeaders(
+                array(
+                    'Content-Length' => strlen($response->getContent())
+                )
+            );
         }
 
         // process any HTTP status filter callbacks

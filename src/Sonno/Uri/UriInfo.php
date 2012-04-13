@@ -114,7 +114,7 @@ class UriInfo
      */
     public function getBaseUri()
     {
-        return $this->_config->getBaseUri();
+        return $this->_config->getBasePath();
     }
 
     /**
@@ -125,7 +125,7 @@ class UriInfo
     public function getBaseUriBuilder()
     {
         $builder = new UriBuilder($this->_config, $this->_request);
-        return $builder->replacePath($this->_config->getBaseUri());
+        return $builder->replacePath($this->getBaseUri());
     }
 
     /**

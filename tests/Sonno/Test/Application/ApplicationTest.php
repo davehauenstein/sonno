@@ -222,6 +222,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $response = $app->run($request);
 
         $this->assertEquals(405, $response->getStatusCode());
+        $this->assertEquals('GET', $response->getHeader('Allow'));
     }
 
     /**
@@ -370,6 +371,43 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that a resource class method whose first argument is a type that
+     * impelements Renderable will be passed an instance of that class
+     * generated from the request body.
+     *
+     * @return void
+     */
+    public function testUnrenderedResourceMethodArgument()
+    {
+        $config  = $this->buildMockConfiguration(array(
+            array(
+                'path' => '/test/polo',
+                'httpMethod' => 'POST',
+                'resourceClassName' => 'Sonno\Test\Application\Asset\TestResource',
+                'resourceMethodName' => 'createPolo',
+                'produces' => array('application/xml'),
+                'consumes' => array('application/json'),
+                'contexts' => array())
+        ), '/service/v1');
+        $request = $this->buildMockRequest(
+            'POST',
+            '/service/v1/test/polo',
+            'application/json',
+            new Variant(null, null, 'application/xml'),
+            array(),
+            array(),
+            json_encode(array('colour' => 'Magenta'))
+        );
+
+        $app = new Application($config);
+        $response = $app->run($request);
+
+        $this->assertEquals(201, $response->getStatusCode());
+        $this->assertEquals('<polo><color>magenta</color></polo>', $response->getContent());
+        $this->assertEquals('application/xml', $response->getHeader('Content-Type'));
+    }
+
+    /**
      * Test a successful execution of Application::run() that correctly
      * processes the result of a resource method that returns a scalar value.
      *
@@ -419,7 +457,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * Test that a cookie in the HTTP request is successfully passed to a
      * resource method call.
      *
-     * @todo
      * @return void
      */
     public function testFormParam()
@@ -456,7 +493,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * Test that a cookie in the HTTP request is successfully passed to a
      * resource method call.
      *
-     * @todo
      * @return void
      */
     public function testHeaderParam()
@@ -493,7 +529,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * resource method call.
      *
      * @return void
-     * @todo
      */
     public function testPathParam()
     {
@@ -528,7 +563,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * resource method call.
      *
      * @return void
-     * @todo
      */
     public function testQueryParam()
     {
@@ -591,6 +625,12 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(405, $response->getStatusCode());
     }
 
+    /**
+     * Test registering a response filter callback and ensuring it is
+     * executed.
+     *
+     * @return void
+     */
     public function testResponseFilterCallback()
     {
         $config = $this->buildMockConfiguration(array(
@@ -623,6 +663,12 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Sorry, but that resource does not exist', $response->getContent());
     }
 
+    /**
+     * Test registering, and then unregistering a specific response filter
+     * callback and ensure that it is not executed.
+     *
+     * @return void
+     */
     public function testUnregisterSpecificFilterCallback()
     {
         $config = $this->buildMockConfiguration(array(
@@ -658,6 +704,12 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Sorry, but that resource does not exist', $response->getContent());
     }
 
+    /**
+     * Test registering and then unregistering all response filter callbacks
+     * for a specific status code, and ensure that they are not executed.
+     *
+     * @return void
+     */
     public function testUnregisterAllFilterCallbacks()
     {
         $config = $this->buildMockConfiguration(array(

@@ -42,5 +42,5 @@ interface Renderable
      *
      * @return object
      */
-    public function unrender($representation, Variant $mediaType);
+    public static function unrender($representation, Variant $mediaType);
 }
