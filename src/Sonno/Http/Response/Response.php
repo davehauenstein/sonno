@@ -307,6 +307,10 @@ class Response
      */
     public function sendHeaders()
     {
+        foreach ($this->_headers as $header => $value) {
+            header($header . ': ' . $value);
+        }
+
         header(
             sprintf(
                 'HTTP/%s %s %s',
@@ -315,10 +319,6 @@ class Response
                 self::$statusCodes[$this->_statusCode]
             )
         );
-
-        foreach ($this->_headers as $header => $value) {
-            header($header . ': ' . $value);
-        }
     }
 
     /**
