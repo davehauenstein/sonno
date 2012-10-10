@@ -14,6 +14,7 @@ namespace Sonno\Dispatcher;
 
 use Sonno\Application\WebApplicationException,
     Sonno\Configuration\Route,
+    Sonno\Dispatcher\DispatcherInterface,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Variant,
     Sonno\Uri\UriInfo,
@@ -27,67 +28,43 @@ use Sonno\Application\WebApplicationException,
  * @package  Sonno\Dispatcher
  * @author   Tharsan Bhuvanendran <me@tharsan.com>
  */
-class Dispatcher
+class Dispatcher implements DispatcherInterface
 {
     /**
-     * The incoming HTTP request.
-     *
-     * @var Sonno\Request\RequestInterface
-     */
-    protected $_request;
-
-    /**
-     * Information about the URI.
-     *
-     * @var Sonno\Uri\UriInfo
+     * @var \Sonno\Uri\UriInfo
      */
     protected $_uriInfo;
 
     /**
-     * Construct a new Application.
-     *
-     * @param Sonno\Request\RequestInterface $request The incoming HTTP request.
-     * @param Sonno\Uri\UriInfo $uriInfo Information about the URI.
+     * @var \Sonno\Http\Request\RequestInterface
      */
-    public function __construct(RequestInterface $request, UriInfo $uriInfo)
-    {
-        $this->_request = $request;
-        $this->_uriInfo = $uriInfo;
-    }
+    protected $_request;
 
     /**
-     * Setter for request object.
+     * Set the URI info.
      *
-     * @param  Sonno\Request\RequestInterface $request
-     * @return Sonno\Dispatcher\Dispatcher Implements fluent interface.
+     * @param \Sonno\Uri\UriInfo $uriInfo
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
      */
-    public function setConfig(Configuration $config)
+    public function setUriInfo(\Sonno\Uri\UriInfo $uriInfo)
     {
-        $this->_config = $config;
+        $this->_uriInfo = $uriInfo;
         return $this;
     }
 
     /**
-     * Getter for request object.
+     * Set the incoming HTTP request.
      *
-     * @return Sonno\Request\RequestInterface
+     * @param \Sonno\Http\Request\RequestInterface $request
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
      */
-    public function getConfig()
+    public function setRequest(\Sonno\Http\Request\RequestInterface $request)
     {
-        return $this->_request;
+        $this->_request = $request;
+        return $this;
     }
 
-    /**
-     * Dispatch the current HTTP request to the specified route.
-     * Instantiate the resource class specified by the route, and then execute
-     * the resource class method specified by the route using data coalesced
-     * from certain sources.
-     *
-     * @param Sonno\Configuration\Route $route The selected route to execute.
-     * @return mixed
-     */
-    public function dispatch(Route $route)
-    {
+    public function dispatch(Route $route) {
         // obtain Reflection objects for the resource method selected
         $reflClass  = new ReflectionClass($route->getResourceClassName());
         $reflMethod = $reflClass->getMethod($route->getResourceMethodName());

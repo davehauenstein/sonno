@@ -21,6 +21,7 @@ use ReflectionClass,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
     Sonno\Http\Variant,
+    Sonno\Dispatcher\DispatcherInterface,
     Sonno\Dispatcher\Dispatcher,
     Sonno\Router\Router,
     Sonno\Uri\UriInfo;
@@ -45,6 +46,13 @@ class Application
     protected $_config;
 
     /**
+     * Request dispatcher.
+     *
+     * @var \Sonno\Dispatcher\DispatcherInterface
+     */
+    protected $_dispatcher;
+
+    /**
      * A registry of filters that may perform additional processing on a
      * {@link Sonno\Response\Response} before it is delivered.
      *
@@ -59,13 +67,13 @@ class Application
      */
     public function __construct(Configuration $config)
     {
-        $this->_config  = $config;
+        $this->_config = $config;
     }
 
     /**
      * Getter for configuration object.
      *
-     * @return Sonno\Configuration\Configuration
+     * @return \Sonno\Configuration\Configuration
      */
     public function getConfig()
     {
@@ -79,13 +87,38 @@ class Application
     /**
      * Setter for configuration object.
      *
-     * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
-    *       interface.
+     * @param  \Sonno\Configuration\Configuration $config
+     * @return \Sonno\Application\Application Implements fluent interface.
      */
     public function setConfig(Configuration $config)
     {
         $this->_config = $config;
+        return $this;
+    }
+
+    /**
+     * Getter for dispatcher object.
+     *
+     * @return \Sonno\Dispatcher\DispatcherInterface
+     */
+    public function getDispatcher()
+    {
+        if (null === $this->_dispatcher) {
+            $this->setDispatcher(new Dispatcher());
+        }
+
+        return $this->_dispatcher;
+    }
+
+    /**
+     * Setter for dispatcher object.
+     *
+     * @param  \Sonno\Dispatcher\DispatcherInterface $dispatcher
+     * @return \Sonno\Application\Application Implements fluent interface.
+     */
+    public function setDispatcher(DispatcherInterface $dispatcher)
+    {
+        $this->_dispatcher = $dispatcher;
         return $this;
     }
 
@@ -137,8 +170,10 @@ class Application
             $uriInfo->setQueryParameters($request->getQueryParams());
 
             // execute the resource class method and obtain the result
-            $dispatcher = new Dispatcher($request, $uriInfo);
-            $result = $dispatcher->dispatch($selectedRoute);
+            $result = $this->getDispatcher()
+                ->setRequest($request)
+                ->setUriInfo($uriInfo)
+                ->dispatch($selectedRoute);
         } catch(WebApplicationException $e) {
             $result = $e->getResponse();
         }
