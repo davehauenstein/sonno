@@ -1,0 +1,13 @@
+{
+    "name": "Sonno",
+    "description": "Sonno is a lightweight PHP framework based loosely on Jersey, a Java ReST framework reference implementation of the JAX-RS specification.",
+    "require": {
+        "doctrine/common": "2.2.1",
+        "monolog/monolog": "1.2.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Sonno": "src/"
+        }
+    }
+}
