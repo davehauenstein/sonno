@@ -13,7 +13,6 @@
 namespace Sonno\Uri;
 
 use Sonno\Configuration\Configuration,
-    Sonno\Configuration\Route,
     Sonno\Http\Request\RequestInterface;
 
 /**
@@ -32,14 +31,14 @@ class UriInfo
     /**
      * Application configuration.
      *
-     * @var Sonno\Configuration\Configuration
+     * @var \Sonno\Configuration\Configuration
      */
     protected $_config;
 
     /**
      * The incoming request.
      *
-     * @var Sonno\Http\Request\RequestInterface
+     * @var \Sonno\Http\Request\RequestInterface
      */
     protected $_request;
 
@@ -98,7 +97,7 @@ class UriInfo
      * includes everything preceding the path (host, port etc) but excludes
      * query parameters. 
      *
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function getAbsolutePathBuilder()
     {
@@ -120,7 +119,7 @@ class UriInfo
     /**
      * Get the base URI of the application in the form of a UriBuilder.
      *
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function getBaseUriBuilder()
     {
@@ -163,8 +162,7 @@ class UriInfo
     /**
      * Get the absolute request URI in the form of a UriBuilder.
      *
-     * @todo
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function getRequestUriBuilder()
     {
@@ -186,10 +184,10 @@ class UriInfo
     /**
      * Set the URI query parameters of the current request.
      *
-     * @param $pathParameters The new values for URI query parameters.
+     * @param array $queryParameters The new values for URI query parameters.
      * @return void
      */
-    public function setQueryParameters($queryParameters)
+    public function setQueryParameters(array $queryParameters)
     {
         $this->_queryParams = $queryParameters;
     }
@@ -197,7 +195,7 @@ class UriInfo
     /**
      * Set the application configuration.
      *
-     * @param Sonno\Configuration\Configuration $config The application
+     * @param \Sonno\Configuration\Configuration $config The application
      *                                                  configuration data.
      * @return void
      */
@@ -209,7 +207,7 @@ class UriInfo
     /**
      * Set the incoming request.
      *
-     * @param Sonno\Http\Request\RequestInterface $request The incoming request.
+     * @param \Sonno\Http\Request\RequestInterface $request The incoming request.
      * @return void
      */
     protected function _setRequest(RequestInterface $request)

@@ -426,7 +426,7 @@ class Request implements RequestInterface
      * </li>
      *
      * @param  $variants<Sonno\Http\Variant> An array of variants.
-     * @return null|Sonno\Http\Variant Will return null if a variant couldn't
+     * @return null|\Sonno\Http\Variant Will return null if a variant couldn't
      *         be selected.
      * @todo   Add support for variants with wildcards and a test case for it.
      * @todo   Add accept-encoding to content negotiation.
@@ -452,6 +452,8 @@ class Request implements RequestInterface
         }
 
         $potential = array();
+
+        /** @var $variant \Sonno\Http\Variant */
         foreach ($variants as $variant) {
             $mediaType = $variant->getMediaType();
             list($type, $subtype) = preg_split('/\//', $mediaType);
@@ -515,10 +517,10 @@ class Request implements RequestInterface
      *
      * @param string $lastModified 
      * @param string $eTag 
-     * @return Sonno\Http\Response null if the preconditions are met or a
-     *         Response set with the appropriate status if the
-     *         preconditions are not met. A returned Response will
-     *         include an ETag header set with the value of eTag.
+     * @return null|\Sonno\Http\Response\Response null if the preconditions are
+     *         met or a Response set with the appropriate status if the
+     *         preconditions are not met. A returned Response will include an
+     *         ETag header set with the value of eTag.
      * @throws \InvalidArgumentException If both parameters are null.
      */
     public function evaluatePreconditions($lastModified = null, $eTag = null)
@@ -571,6 +573,8 @@ class Request implements RequestInterface
                 'Neither $lastModifed nor $eTag were specified as arguments.'
             );
         }
+
+        return null;
     }
 
     /**
@@ -586,7 +590,7 @@ class Request implements RequestInterface
      *   $method  = $request->getMethod();
      * </pre>
      *
-     * @return void
+     * @return \Sonno\Http\Request\RequestInterface
      */
     public static function getInstanceOfCurrentRequest()
     {
@@ -676,7 +680,7 @@ class Request implements RequestInterface
      * Server Last-Modified Time - Sat, 29 Jan 2011 19:43:31 GMT
      * Return FALSE - Precondition NOT Met
      *
-     * @param int $serverTime Last-modified time of application resource state.
+     * @param \DateTime $serverTime Last-modified time of application resource state.
      * @return boolean Will return true if precondition is met, false if not.
      *         null if the if-modified-since header is not present or invalid.
      */
@@ -716,7 +720,7 @@ class Request implements RequestInterface
      * Server Last-Modified Time - Sat, 29 Jan 2011 19:43:31 GMT
      * Return TRUE - Precondition Met
      *
-     * @param int $serverTime Last-modified time of application resource state.
+     * @param \DateTime $serverTime Last-modified time of application resource state.
      * @return boolean Will return true if precondition is met, false if not.
      *         null if the if-modified-since header is not present or invalid.
      */

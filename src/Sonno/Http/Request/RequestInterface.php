@@ -1,10 +1,11 @@
 <?php
 
 /**
- * @category Sonno
- * @package  Sonno\Http\Request
- * @author   Dave Hauenstein <davehauenstein@gmail.com>
- * @author   Tharsan Bhuvanendran <me@tharsan.com>
+ * @category   Sonno
+ * @package    Sonno\Http\Request
+ * @subpackage Request
+ * @author     Dave Hauenstein <davehauenstein@gmail.com>
+ * @author     Tharsan Bhuvanendran <me@tharsan.com>
  * @author     360i <sonno@360i.com>
  * @copyright  Copyright (c) 2011 360i LLC (http://360i.com)
  * @license    http://sonno.360i.com/LICENSE.txt New BSD License
@@ -77,6 +78,8 @@ interface RequestInterface
     /**
      * Return a specific query parameter.
      *
+     * @param string $param
+     *
      * @return string
      */
     public function getQueryParam($param);
@@ -148,8 +151,9 @@ interface RequestInterface
      * Select the representation variant that best matches the request.
      * More explicit variants are chosen ahead of less explicit ones.
      *
-     * @return Sonno\Http\Variant
-     * @throws Sonno\Http\Request\VariantException No variants can be selected.
+     * @param array<\Sonno\Http\Variant> $variants
+     *
+     * @return \Sonno\Http\Variant
      */
     public function selectVariant(array $variants);
 

@@ -26,17 +26,17 @@ class WebApplicationException extends \Exception
     /**
      * The HTTP response for the unexpected web application error.
      *
-     * @var Sonno\Http\Response\Response
+     * @var \Sonno\Http\Response\Response
      */
     protected $_response;
 
     /**
      * Create a new web application Exception.
      *
-     * @param int    $status  HTTP status code to respond to the request with.
-     * @param object $message Response entity to respond to the request with.
+     * @param int   $status  HTTP status code to respond to the request with.
+     * @param mixed $message Response entity to respond to the request with.
      */
-    public function __construct($status, $message = NULL)
+    public function __construct($status, $message = null)
     {
         if ($status instanceof Response) {
             $this->_response = $status;
@@ -48,7 +48,7 @@ class WebApplicationException extends \Exception
     /**
      * Retrieve the HTTP response for the unexpected web application error.
      *
-     * @return Sonno\Http\Response\Response
+     * @return \Sonno\Http\Response\Response
      */
     public function getResponse()
     {

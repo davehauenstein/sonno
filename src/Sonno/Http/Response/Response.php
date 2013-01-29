@@ -112,23 +112,24 @@ class Response
     /**
      * Construct a new HTTP Response.
      *
-     * @param  string $code Response Status Code.
+     * @param  int    $code    Response Status Code.
      * @param  string $content Response body content.
-     * @param  string $headers Response headers.
-     * @return void
+     * @param  array  $headers Response headers.
+     *
+     * @return \Sonno\Http\Response\Response
      */
-    public function __construct($code = 200, $content = '', $headers = array())
+    public function __construct($code = 200, $content = '', array $headers = array())
     {
         $this->setContent($content)
              ->setStatusCode($code)
-             ->setHeaders((array) $headers);
+             ->setHeaders($headers);
     }
 
     /**
      * Set HTTP response content body.
      *
      * @param string $content Response body content.
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      */
     public function setContent($content)
     {
@@ -140,7 +141,7 @@ class Response
      * Set HTTP response status code.
      *
      * @param string $statusCode 
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      */
     public function setStatusCode($statusCode)
     {
@@ -152,7 +153,7 @@ class Response
      * Set HTTP response headers.
      *
      * @param array $headers An array of response headers.
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      */
     public function setHeaders(array $headers)
     {
@@ -190,7 +191,7 @@ class Response
      * Unset a header from the headers array.
      *
      * @param string $header 
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      */
     public function removeHeader($header)
     {
@@ -203,7 +204,6 @@ class Response
     /**
      * Returns an array of headers.
      *
-     * @param array $headers 
      * @return array Return an array of headers.
      */
     public function getHeaders()
@@ -236,7 +236,7 @@ class Response
      * code for an HTTP "Created" response.
      *
      * @param string $location 
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      */
     public function setCreated($location)
     {
@@ -249,7 +249,7 @@ class Response
      * A convenience method for appropriately setting headers and the response
      * code for an HTTP "Not Modified" response.
      *
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      */
     public function setNotModified()
     {
@@ -276,9 +276,9 @@ class Response
     /**
      * Send both the HTTP headers as well as the content body.
      *
-     * @param  $sendHeaders Whether or not to send headers.
-     * @return Sonno\Http\Response Implements fluent interface.
-     * @throws Sonno\Http\Response\ResponseException If an error occured while
+     * @param  bool $sendHeaders Whether or not to send headers.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
+     * @throws \Sonno\Http\Response\ResponseException If an error occured while
      *         writing content to the response body.
      */
     public function sendResponse($sendHeaders = true)
@@ -302,7 +302,7 @@ class Response
     /**
      * Send HTTP headers.
      *
-     * @return Sonno\Http\Response Implements fluent interface.
+     * @return \Sonno\Http\Response\Response Implements fluent interface.
      * @todo   Send cookies.
      */
     public function sendHeaders()
@@ -324,7 +324,7 @@ class Response
     /**
      * Setter for static property of the content output stream.
      *
-     * @param  $contentOutputStream A writable stream wrapper.
+     * @param mixed $contentOutputStream A writable stream wrapper.
      * @return void
      */
     public static function setContentOutputStream($contentOutputStream)
