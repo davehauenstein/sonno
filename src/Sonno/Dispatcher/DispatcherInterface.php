@@ -12,9 +12,7 @@
 
 namespace Sonno\Dispatcher;
 
-use Sonno\Configuration\Route,
-    Sonno\Http\Request\RequestInterface,
-    Sonno\Uri\UriInfo;
+use Sonno\Configuration\Route;
 
 /**
  * Responsible for executing code specified by a Route.
@@ -36,4 +34,20 @@ interface DispatcherInterface
      * @return mixed
      */
     public function dispatch(Route $route);
+
+    /**
+     * Set the incoming HTTP request.
+     *
+     * @param \Sonno\Http\Request\RequestInterface $request
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
+     */
+    public function setRequest(\Sonno\Http\Request\RequestInterface $request);
+
+    /**
+     * Set the URI info.
+     *
+     * @param \Sonno\Uri\UriInfo $uriInfo
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
+     */
+    public function setUriInfo(\Sonno\Uri\UriInfo $uriInfo);
 }

@@ -2,16 +2,15 @@
 
 /**
  * @category Sonno
- * @package  Test
+ * @package  Sonno\Test\Application
  * @author   Dave Hauenstein <davehauenstein@gmail.com>
  * @author   Tharsan Bhuvanendran <me@tharsan.com>
  */
 
-namespace Sonno\Test;
-
-require_once __DIR__ . '/Asset/TestResource.php';
+namespace Sonno\Test\Application;
 
 use Sonno\Application\Application,
+    Sonno\Application\WebApplicationException,
     Sonno\Http\Variant;
 
 /**
@@ -46,7 +45,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * @param array $headers The array of HTTP header names to values.
      * @param string $contentBody The HTTP request body content.
      *
-     * @return Sonno\Http\Request\RequestInterface
+     * @return \Sonno\Http\Request\RequestInterface
      */
     protected function buildMockRequest(
         $method = null,
@@ -125,7 +124,10 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     /**
      * Generate a mock \Sonno\Configuration\Configuration object.
      *
-     * @return Sonno\Configuration\Configuration
+     * @param array $routeOptions
+     * @param null  $baseUri
+     *
+     * @return \Sonno\Configuration\Configuration
      */
     protected function buildMockConfiguration(
         $routeOptions = array(),
@@ -177,24 +179,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * @return void
      */
     public function testNotFound()
-    {
-        $config  = $this->buildMockConfiguration();
-        $request = $this->buildMockRequest();
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(404, $response->getStatusCode());
-    }
-
-    /**
-     * Test that when an exception that extends
-     * Sonno\Application\WebApplicationException is thrown, the Exception's
-     * constructor argument is used as the Response entity.
-     *
-     * @return void
-     */
-    public function testWebApplicationExceptionContentEntity()
     {
         $config  = $this->buildMockConfiguration();
         $request = $this->buildMockRequest();
@@ -278,7 +262,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * the result of a resource method.
      *
      * @return void
-     * @expectedException Sonno\Application\MalformedResourceRepresentationException
+     * @expectedException \Sonno\Application\MalformedResourceRepresentationException
      */
     public function testMalformedResponseReturnedByResource()
     {
@@ -300,7 +284,47 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         );
 
         $app = new Application($config);
+        $app->run($request);
+    }
+
+    /**
+     * Test that when a {@link Sonno\Application\WebApplicationException} is
+     * thrown, the Exception's constructor argument is used as the Response entity.
+     *
+     * @return void
+     */
+    public function testWebApplicationExceptionContentEntity()
+    {
+        $exception = new WebApplicationException(404, '<p>Entity not found!</p>');
+        $dispatcher = $this->getMock('Sonno\Dispatcher\Dispatcher');
+        $dispatcher->expects($this->any())
+            ->method('dispatch')
+            ->will($this->throwException($exception));
+
+        $config  = $this->buildMockConfiguration(
+            array(
+                 array(
+                     'path' => '/test/123',
+                     'httpMethod' => 'GET',
+                     'produces' => array('text/html')
+                 )
+            )
+        );
+
+        $request = $this->buildMockRequest(
+            'GET',
+            '/test/123',
+            null,
+            new Variant(null, null, 'text/html')
+        );
+
+        $app = new Application($config);
+        $app->setDispatcher($dispatcher);
+
         $response = $app->run($request);
+
+        $this->assertEquals('<p>Entity not found!</p>', $response->getContent());
+        $this->assertEquals(404, $response->getStatusCode());
     }
 
     /**
@@ -371,43 +395,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that a resource class method whose first argument is a type that
-     * impelements Renderable will be passed an instance of that class
-     * generated from the request body.
-     *
-     * @return void
-     */
-    public function testUnrenderedResourceMethodArgument()
-    {
-        $config  = $this->buildMockConfiguration(array(
-            array(
-                'path' => '/test/polo',
-                'httpMethod' => 'POST',
-                'resourceClassName' => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'createPolo',
-                'produces' => array('application/xml'),
-                'consumes' => array('application/json'),
-                'contexts' => array())
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'POST',
-            '/service/v1/test/polo',
-            'application/json',
-            new Variant(null, null, 'application/xml'),
-            array(),
-            array(),
-            json_encode(array('colour' => 'Magenta'))
-        );
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(201, $response->getStatusCode());
-        $this->assertEquals('<polo><color>magenta</color></polo>', $response->getContent());
-        $this->assertEquals('application/xml', $response->getHeader('Content-Type'));
-    }
-
-    /**
      * Test a successful execution of Application::run() that correctly
      * processes the result of a resource method that returns a scalar value.
      *
@@ -443,189 +430,6 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that a cookie in the HTTP request is successfully passed to a
-     * resource method call.
-     *
-     * @todo
-     * @return void
-     */
-    public function testCookieParam()
-    {
-    }
-
-    /**
-     * Test that a cookie in the HTTP request is successfully passed to a
-     * resource method call.
-     *
-     * @return void
-     */
-    public function testFormParam()
-    {
-        $config  = $this->buildMockConfiguration(array(
-            array(
-                'path'               => '/test/paper',
-                'httpMethod'         => 'GET',
-                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'modifyString',
-                'produces'           => array('text/plain'),
-                'contexts'           => array('_incomingRequest' => 'Request'),
-                'formParams'         => array('str'),
-                'queryParams'        => array('op'))
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'GET',
-            '/service/v1/test/paper',
-            null,
-            new Variant('text/plain'),
-            array('op' => 'upper'),
-            array(),
-            'str=hackeysackey'
-        );
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("HACKEYSACKEY|GET", $response->getContent());
-    }
-
-    /**
-     * Test that a cookie in the HTTP request is successfully passed to a
-     * resource method call.
-     *
-     * @return void
-     */
-    public function testHeaderParam()
-    {
-        $config  = $this->buildMockConfiguration(array(
-            array(
-                'path'               => '/test/{str}',
-                'httpMethod'         => 'GET',
-                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'modifyString',
-                'produces'           => array('text/plain'),
-                'contexts'           => array('_incomingRequest' => 'Request'),
-                'headerParams'       => array('str'),
-                'queryParams'        => array('op'))
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'GET',
-            '/service/v1/test/camelCase',
-            null,
-            new Variant('text/plain'),
-            array('op' => 'upper'),
-            array('str' => 'Cat')
-        );
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("CAT|GET", $response->getContent());
-    }
-
-    /**
-     * Test that a cookie in the HTTP request is successfully passed to a
-     * resource method call.
-     *
-     * @return void
-     */
-    public function testPathParam()
-    {
-        $config  = $this->buildMockConfiguration(array(
-            array(
-                'path'               => '/test/{str}',
-                'httpMethod'         => 'GET',
-                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'modifyString',
-                'produces'           => array('text/plain'),
-                'contexts'           => array('_incomingRequest' => 'Request'),
-                'pathParams'         => array('str'),
-                'queryParams'        => array('op'))
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'GET',
-            '/service/v1/test/camelCase',
-            null,
-            new Variant('text/plain'),
-            array('op' => 'upper')
-        );
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("CAMELCASE|GET", $response->getContent());
-    }
-
-    /**
-     * Test that a cookie in the HTTP request is successfully passed to a
-     * resource method call.
-     *
-     * @return void
-     */
-    public function testQueryParam()
-    {
-        $config  = $this->buildMockConfiguration(array(
-            array(
-                'path'               => '/test/{str}',
-                'httpMethod'         => 'GET',
-                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'modifyString',
-                'produces'           => array('text/plain'),
-                'contexts'           => array('_incomingRequest' => 'Request'),
-                'pathParams'         => array('str'),
-                'queryParams'        => array('op'))
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'GET',
-            '/service/v1/test/camelCase',
-            null,
-            new Variant('text/plain'),
-            array('op' => 'upper')
-        );
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("CAMELCASE|GET", $response->getContent());
-    }
-
-    /**
-     * Test a {@link Sonno\Application\WebApplicationException} being thrown
-     * by a resource class method.
-     *
-     * @return void
-     */
-    public function testThrownWebApplicationException()
-    {
-        $config = $this->buildMockConfiguration(array(
-            array(
-                'path'               => '/test',
-                'httpMethod'         => 'GET',
-                'resourceClassName'  => 'Sonno\Test\Application\Asset\TestResource',
-                'resourceMethodName' => 'causeError',
-                'produces'           => array('text/plain'),
-                'contexts'           => array(), // do not inject context
-                'pathParams'         => array(),
-                'queryParams'        => array()
-            )
-        ), '/service/v1');
-        $request = $this->buildMockRequest(
-            'GET',
-            '/service/v1/test',
-            null,
-            new Variant('text/plain')
-        );
-
-        $app = new Application($config);
-        $response = $app->run($request);
-
-        $this->assertEquals(405, $response->getStatusCode());
-    }
-
-    /**
      * Test registering a response filter callback and ensuring it is
      * executed.
      *
@@ -652,9 +456,11 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
 
         $app = new Application($config);
         $app->registerResponseFilter(404, function($request, $response) {
+            /** @var $response \Sonno\Http\Response\Response */
             $response->setHeaders(array('Content-Type' => 'text/plain'));
         });
         $app->registerResponseFilter(404, function($request, $response) {
+            /** @var $response \Sonno\Http\Response\Response */
             $response->setContent('Sorry, but that resource does not exist');
         });
         $response = $app->run($request);
@@ -691,10 +497,12 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app = new Application($config);
 
         $tmpCallback = function($request, $response) {
+            /** @var $response \Sonno\Http\Response\Response */
             $response->setHeaders(array('Content-Type' => 'text/html'));
         };
         $app->registerResponseFilter(404, $tmpCallback);
         $app->registerResponseFilter(404, function($request, $response) {
+            /** @var $response \Sonno\Http\Response\Response */
             $response->setContent('Sorry, but that resource does not exist');
         });
         $app->unregisterResponseFilter(404, $tmpCallback);
@@ -732,9 +540,11 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
         $app = new Application($config);
 
         $app->registerResponseFilter(404, function($request, $response) {
+            /** @var $response \Sonno\Http\Response\Response */
             $response->setHeaders(array('Content-Type' => 'text/html'));
         });
         $app->registerResponseFilter(404, function($request, $response) {
+            /** @var $response \Sonno\Http\Response\Response */
             $response->setContent('Sorry, but that resource does not exist');
         });
         $app->unregisterResponseFilter(404);

@@ -40,6 +40,14 @@ class Dispatcher implements DispatcherInterface
      */
     protected $_request;
 
+    public function __construct(
+        RequestInterface $request = null,
+        UriInfo $uriInfo = null
+    ) {
+        $this->_request = $request;
+        $this->_uriInfo = $uriInfo;
+    }
+
     /**
      * Set the URI info.
      *
@@ -161,6 +169,7 @@ class Dispatcher implements DispatcherInterface
                     $this->_request->getRequestBody(),
                     new Variant(null, null, $this->_request->getContentType())
                 );
+
                 $resourceMethodArgs[$idx] = $parameterValue;
             }
 
