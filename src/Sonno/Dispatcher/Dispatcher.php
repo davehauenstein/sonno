@@ -105,12 +105,30 @@ class Dispatcher implements DispatcherInterface
             }
         }
 
+        // execute the pre-dispatch method on the resource class if one is
+        // implemented
+        if ($reflClass->hasMethod('preDispatch')) {
+            $method = $reflClass->getMethod('preDispatch');
+            if ($result = $method->invoke($resource)) {
+                return $result;
+            }
+        }
+
         // execute the selected resource method using the generated method
         // arguments
         $methodArgs = $this->_getResourceMethodArguments($route, $reflMethod);
 
         try {
-            return $reflMethod->invokeArgs($resource, $methodArgs);
+            $result = $reflMethod->invokeArgs($resource, $methodArgs);
+
+            // execute the post-dispatch method on the resource class if one is
+            // implemented
+            if ($reflClass->hasMethod('postDispatch')) {
+                $method = $reflClass->getMethod('postDispatch');
+                $method->invoke($resource);
+            }
+
+            return $result;
         } catch(WebApplicationException $e) {
             return $e->getResponse();
         }

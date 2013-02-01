@@ -333,4 +333,41 @@ class DispatcherTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('gollum', $result);
     }
+
+    /**
+     * Test that the pre-dispatch method of a resource class is executed
+     * before the selected resource method.
+     */
+    public function testPreDispatch()
+    {
+        $request = $this->getMockBuilder('Sonno\Http\Request\Request')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $uriInfo = $this->getMockBuilder('Sonno\Uri\UriInfo')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $route = $this->getMockBuilder('Sonno\Configuration\Route')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $route->expects($this->any())
+            ->method('getResourceClassName')
+            ->will($this->returnValue('Sonno\Test\Dispatcher\Asset\PreDispatchResultResource'));
+
+        $route->expects($this->any())
+            ->method('getResourceMethodName')
+            ->will($this->returnValue('testPreDispatch'));
+
+        $route->expects($this->any())
+            ->method('getContexts')
+            ->will($this->returnValue(array()));
+
+        $dispatcher = new Dispatcher($request, $uriInfo);
+        $result = $dispatcher->dispatch($route);
+
+        $this->assertEquals(200, $result->getStatusCode());
+        $this->assertEquals('Result from Pre-Dispatch', $result->getContent());
+    }
 }
