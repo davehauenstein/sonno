@@ -680,7 +680,8 @@ class Request implements RequestInterface
      * Server Last-Modified Time - Sat, 29 Jan 2011 19:43:31 GMT
      * Return FALSE - Precondition NOT Met
      *
-     * @param \DateTime $serverTime Last-modified time of application resource state.
+     * @param \DateTime $serverTime Last-modified time of application resource
+     *                              state.
      * @return boolean Will return true if precondition is met, false if not.
      *         null if the if-modified-since header is not present or invalid.
      */
@@ -720,7 +721,8 @@ class Request implements RequestInterface
      * Server Last-Modified Time - Sat, 29 Jan 2011 19:43:31 GMT
      * Return TRUE - Precondition Met
      *
-     * @param \DateTime $serverTime Last-modified time of application resource state.
+     * @param \DateTime $serverTime Last-modified time of application resource
+     *                              state.
      * @return boolean Will return true if precondition is met, false if not.
      *         null if the if-modified-since header is not present or invalid.
      */

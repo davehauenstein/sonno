@@ -118,7 +118,10 @@ class Response
      *
      * @return \Sonno\Http\Response\Response
      */
-    public function __construct($code = 200, $content = '', array $headers = array())
+    public function __construct(
+        $code = 200,
+        $content = '',
+        array $headers = array())
     {
         $this->setContent($content)
              ->setStatusCode($code)

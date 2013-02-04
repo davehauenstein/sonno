@@ -46,9 +46,9 @@ class Variant
     /**
      * Create a new instance of Variant.
      *
-     * @param string $encoding  The content encoding of the variant - may be null.
-     * @param string $language  The language of the variant - may be null.
-     * @param string $mediaType The media type of the variant - may be null.
+     * @param null|string $encoding  The content encoding of the variant.
+     * @param null|string $language  The language of the variant.
+     * @param null|string $mediaType The media type of the variant.
      */
     public function __construct(
         $encoding  = null,

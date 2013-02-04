@@ -207,12 +207,12 @@ class UriInfo
     /**
      * Set the incoming request.
      *
-     * @param \Sonno\Http\Request\RequestInterface $request The incoming request.
+     * @param \Sonno\Http\Request\RequestInterface $request The incoming
+     *                                                      request.
      * @return void
      */
     protected function _setRequest(RequestInterface $request)
     {
         $this->_request = $request;
     }
-
 }

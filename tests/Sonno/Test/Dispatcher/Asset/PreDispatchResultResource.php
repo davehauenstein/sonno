@@ -29,6 +29,5 @@ class PreDispatchResultResource
 
     public function postDispatch()
     {
-
     }
 }

@@ -42,8 +42,8 @@ class Dispatcher implements DispatcherInterface
 
     public function __construct(
         RequestInterface $request = null,
-        UriInfo $uriInfo = null
-    ) {
+        UriInfo $uriInfo = null)
+    {
         $this->_request = $request;
         $this->_uriInfo = $uriInfo;
     }
@@ -52,7 +52,8 @@ class Dispatcher implements DispatcherInterface
      * Set the URI info.
      *
      * @param \Sonno\Uri\UriInfo $uriInfo
-     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent
+     *                                               interface.
      */
     public function setUriInfo(\Sonno\Uri\UriInfo $uriInfo)
     {
@@ -64,7 +65,8 @@ class Dispatcher implements DispatcherInterface
      * Set the incoming HTTP request.
      *
      * @param \Sonno\Http\Request\RequestInterface $request
-     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent
+     *                                               interface.
      */
     public function setRequest(\Sonno\Http\Request\RequestInterface $request)
     {
@@ -72,7 +74,8 @@ class Dispatcher implements DispatcherInterface
         return $this;
     }
 
-    public function dispatch(Route $route) {
+    public function dispatch(Route $route)
+    {
         // obtain Reflection objects for the resource method selected
         $reflClass  = new ReflectionClass($route->getResourceClassName());
         $reflMethod = $reflClass->getMethod($route->getResourceMethodName());

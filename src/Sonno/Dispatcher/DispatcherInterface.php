@@ -39,7 +39,8 @@ interface DispatcherInterface
      * Set the incoming HTTP request.
      *
      * @param \Sonno\Http\Request\RequestInterface $request
-     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent
+     *                                               interface.
      */
     public function setRequest(\Sonno\Http\Request\RequestInterface $request);
 
@@ -47,7 +48,8 @@ interface DispatcherInterface
      * Set the URI info.
      *
      * @param \Sonno\Uri\UriInfo $uriInfo
-     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent interface.
+     * @return \Sonno\Dispatcher\DispatcherInterface Implements fluent
+     *                                               interface.
      */
     public function setUriInfo(\Sonno\Uri\UriInfo $uriInfo);
 }
