@@ -169,7 +169,7 @@ class Route
     /**
      * Getter for _consumes property.
      *
-     * @return string _consumes property.
+     * @return array _consumes property.
      */
     public function getConsumes()
     {
@@ -179,7 +179,7 @@ class Route
     /**
      * Getter for _produces property.
      *
-     * @return string _produces property.
+     * @return array _produces property.
      */
     public function getProduces()
     {

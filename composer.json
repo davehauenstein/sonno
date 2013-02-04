@@ -1,0 +1,33 @@
+{
+    "name": "Sonno",
+    "type": "library",
+    "description": "Sonno is a lightweight PHP framework based loosely on Jersey, a Java ReST framework reference implementation of the JAX-RS specification.",
+    "keywords": [ "REST", "ReSTful", "API", "JAX-RS" ],
+    "homepage": "http://sonno.360i.com",
+    "license": "New BSD",
+    "authors": [
+        {
+            "name": "Tharsan Bhuvanendran",
+            "email": "me@tharsan.com",
+            "homepage": "http://www.tharsan.com",
+            "role": "Co-founder/developer"
+        },
+        {
+            "name": "David Hauenstein",
+            "email": "davehauenstein@gmail.com",
+            "homepage": "http://davehauenstein.com",
+            "role": "Co-founder/developer"
+        }
+    ],
+    "require": {
+        "php": ">= 5.3.0",
+        "doctrine/common": "2.2.1",
+        "monolog/monolog": "1.2.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Sonno": "src/",
+            "Sonno\\Test": "tests/"
+        }
+    }
+}
