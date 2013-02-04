@@ -14,6 +14,7 @@ namespace Sonno\Application;
 
 use Sonno\Configuration\Configuration,
     Sonno\Http\Exception\NotAcceptableException,
+    Sonno\Http\Exception\MethodNotAllowedException,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
     Sonno\Http\Variant,
@@ -172,6 +173,13 @@ class Application
             $dispatcher->setUriInfo($uriInfo);
 
             $result = $dispatcher->dispatch($selectedRoute);
+        } catch(MethodNotAllowedException $e) {
+            // rewrite the response as a 200 OK when the request is OPTIONS
+            if ('OPTIONS' == $request->getMethod()) {
+                $e->getResponse()->setStatusCode(200);
+            }
+
+            $result = $e->getResponse();
         } catch(WebApplicationException $e) {
             $result = $e->getResponse();
         }
@@ -185,7 +193,7 @@ class Application
             $response = $result;
 
         // object implements the Renderable interface: construct a Response
-        // using the reprsentation produced by render()
+        // using the representation produced by render()
         } else if ($result instanceof Renderable) {
             $response = new Response(200, $result->render($selectedVariant));
 
@@ -200,18 +208,14 @@ class Application
             && $response->getContent()
         ) {
             $response->setHeaders(
-                array(
-                    'Content-Type' => $selectedVariant->getMediaType()
-                )
+                array('Content-Type' => $selectedVariant->getMediaType())
             );
         }
 
         // ensure a Content-Length header is present
         if (!$response->hasHeader('Content-Length')) {
             $response->setHeaders(
-                array(
-                    'Content-Length' => strlen($response->getContent())
-                )
+                array('Content-Length' => strlen($response->getContent()))
             );
         }
 
@@ -230,7 +234,8 @@ class Application
     /**
      * Register a new response filter for a specific HTTP status code.
      *
-     * @param int       $statusCode     The HTTP status code to register a filter for.
+     * @param int       $statusCode     The HTTP status code to register a
+     *                                  filter for.
      * @param Callable  $filterCallback The PHP callback to execute when the
      *      HTTP error registered against occurs.
      *
