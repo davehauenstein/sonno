@@ -308,7 +308,7 @@ class UriBuilder
         $uri = $this->_concatUriComponents();
 
         foreach ($values as $varName => $varValue) {
-            if (is_string($varValue)) {
+            if (is_scalar($varValue)) {
                 $uri = str_replace("{{$varName}}", $varValue, $uri);
             }
         }
