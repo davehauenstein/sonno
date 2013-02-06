@@ -1,5 +1,5 @@
 {
-    "name": "Sonno",
+    "name": "360i/sonno",
     "type": "library",
     "description": "Sonno is a lightweight PHP framework based loosely on Jersey, a Java ReST framework reference implementation of the JAX-RS specification.",
     "keywords": [ "REST", "ReSTful", "API", "JAX-RS" ],
