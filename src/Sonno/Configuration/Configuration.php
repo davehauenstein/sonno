@@ -43,7 +43,7 @@ class Configuration
      * and ensure a forward slash '/' exists at the beginning of the string.
      *
      * @param $basePath string Application base path.
-     * @return Sonno\Configuration\Configuration Implements a fluent
+     * @return \Sonno\Configuration\Configuration Implements a fluent
      *         interface.
      */
     public function setBasePath($basePath)
@@ -64,8 +64,10 @@ class Configuration
 
     /**
      * Add a route to the _routes property.
-     * 
-     * @return Sonno\Configuration\Configuration Implements a fluent
+     *
+     * @param Route $route
+     *
+     * @return \Sonno\Configuration\Configuration Implements a fluent
      *         interface.
      */
     public function addRoute(Route $route)

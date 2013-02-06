@@ -12,15 +12,13 @@
 
 namespace Sonno\Application;
 
-use ReflectionClass,
-    ReflectionMethod,
-    ReflectionProperty,
-    Sonno\Configuration\Configuration,
-    Sonno\Configuration\Route,
+use Sonno\Configuration\Configuration,
     Sonno\Http\Exception\NotAcceptableException,
+    Sonno\Http\Exception\MethodNotAllowedException,
     Sonno\Http\Request\RequestInterface,
     Sonno\Http\Response\Response,
     Sonno\Http\Variant,
+    Sonno\Dispatcher\DispatcherInterface,
     Sonno\Dispatcher\Dispatcher,
     Sonno\Router\Router,
     Sonno\Uri\UriInfo;
@@ -40,9 +38,16 @@ class Application
     /**
      * Resource configuration data.
      *
-     * @var Sonno\Configuration\Configuration
+     * @var \Sonno\Configuration\Configuration
      */
     protected $_config;
+
+    /**
+     * Request dispatcher.
+     *
+     * @var \Sonno\Dispatcher\DispatcherInterface
+     */
+    protected $_dispatcher;
 
     /**
      * A registry of filters that may perform additional processing on a
@@ -55,17 +60,17 @@ class Application
     /**
      * Construct a new Application.
      *
-     * @param Sonno\Configuration\Configuration $config Resource configuration.
+     * @param \Sonno\Configuration\Configuration $config Resource configuration.
      */
     public function __construct(Configuration $config)
     {
-        $this->_config  = $config;
+        $this->_config = $config;
     }
 
     /**
      * Getter for configuration object.
      *
-     * @return Sonno\Configuration\Configuration
+     * @return \Sonno\Configuration\Configuration
      */
     public function getConfig()
     {
@@ -79,9 +84,8 @@ class Application
     /**
      * Setter for configuration object.
      *
-     * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
-    *       interface.
+     * @param  \Sonno\Configuration\Configuration $config
+     * @return \Sonno\Application\Application Implements fluent interface.
      */
     public function setConfig(Configuration $config)
     {
@@ -90,19 +94,44 @@ class Application
     }
 
     /**
+     * Getter for dispatcher object.
+     *
+     * @return \Sonno\Dispatcher\DispatcherInterface
+     */
+    public function getDispatcher()
+    {
+        if (null === $this->_dispatcher) {
+            $this->setDispatcher(new Dispatcher());
+        }
+
+        return $this->_dispatcher;
+    }
+
+    /**
+     * Setter for dispatcher object.
+     *
+     * @param  \Sonno\Dispatcher\DispatcherInterface $dispatcher
+     * @return \Sonno\Application\Application Implements fluent interface.
+     */
+    public function setDispatcher(DispatcherInterface $dispatcher)
+    {
+        $this->_dispatcher = $dispatcher;
+        return $this;
+    }
+
+    /**
      * Process an incoming request.
      * Determine the appropriate route for the request using a Router, and then
      * execute the resource method to obtain and return a result.
      *
-     * @param Sonno\Http\Request\RequestInterface $request The incoming request
-     * @return Sonno\Http\Response\Response
-     * @throws InvalidArgumentException
-     *
-     * @see Sonno\Router\Router\Router
+     * @param \Sonno\Http\Request\RequestInterface $request The incoming request
+     * @throws MalformedResourceRepresentationException
+     * @throws \Sonno\Http\Exception\NotAcceptableException
+     * @return \Sonno\Http\Response\Response
      */
     public function run(RequestInterface $request)
     {
-        $result = NULL;
+        $selectedVariant = $result = null;
 
         try {
             // attempt to find routes that match the current request
@@ -112,6 +141,8 @@ class Application
             // construct a hash map of Variants based on Routes
             $variantMap = array(); // variant hash => <Sonno\Http\Variant>
             $variants   = array(); // array<Sonno\Http\Variant>
+
+            /** @var $route \Sonno\Configuration\Route */
             foreach ($routes as $route) {
                 $routeProduces = $route->getProduces();
                 foreach ($routeProduces as $produces) {
@@ -137,8 +168,18 @@ class Application
             $uriInfo->setQueryParameters($request->getQueryParams());
 
             // execute the resource class method and obtain the result
-            $dispatcher = new Dispatcher($request, $uriInfo);
+            $dispatcher = $this->getDispatcher();
+            $dispatcher->setRequest($request);
+            $dispatcher->setUriInfo($uriInfo);
+
             $result = $dispatcher->dispatch($selectedRoute);
+        } catch(MethodNotAllowedException $e) {
+            // rewrite the response as a 200 OK when the request is OPTIONS
+            if ('OPTIONS' == $request->getMethod()) {
+                $e->getResponse()->setStatusCode(200);
+            }
+
+            $result = $e->getResponse();
         } catch(WebApplicationException $e) {
             $result = $e->getResponse();
         }
@@ -152,7 +193,7 @@ class Application
             $response = $result;
 
         // object implements the Renderable interface: construct a Response
-        // using the reprsentation produced by render()
+        // using the representation produced by render()
         } else if ($result instanceof Renderable) {
             $response = new Response(200, $result->render($selectedVariant));
 
@@ -167,18 +208,14 @@ class Application
             && $response->getContent()
         ) {
             $response->setHeaders(
-                array(
-                    'Content-Type' => $selectedVariant->getMediaType()
-                )
+                array('Content-Type' => $selectedVariant->getMediaType())
             );
         }
 
         // ensure a Content-Length header is present
         if (!$response->hasHeader('Content-Length')) {
             $response->setHeaders(
-                array(
-                    'Content-Length' => strlen($response->getContent())
-                )
+                array('Content-Length' => strlen($response->getContent()))
             );
         }
 
@@ -197,17 +234,18 @@ class Application
     /**
      * Register a new response filter for a specific HTTP status code.
      *
-     * @param int $statusCode The HTTP status code to register a filter for.
-     * @param Callable $filterCallback The PHP callback to execute when the
+     * @param int       $statusCode     The HTTP status code to register a
+     *                                  filter for.
+     * @param Callable  $filterCallback The PHP callback to execute when the
      *      HTTP error registered against occurs.
      *
-     * @throws InvalidArgumentException
-     * @return Sonno\Application\Application Implements fluent interface.
+     * @throws \InvalidArgumentException
+     * @return \Sonno\Application\Application Implements fluent interface.
      */
     public function registerResponseFilter($statusCode, $filterCallback)
     {
         if (!is_callable($filterCallback)) {
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'The Filter Callback must be callable as a PHP function.'
             );
         }
@@ -230,7 +268,7 @@ class Application
      *      response filter set, or NULL to remove all filters from the
      *      specified HTTP status code filter set.
      *
-     * @return Sonno\Application\Application Implements fluent interface.
+     * @return \Sonno\Application\Application Implements fluent interface.
      */
     public function unregisterResponseFilter(
         $statusCode,

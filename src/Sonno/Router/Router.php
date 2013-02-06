@@ -55,7 +55,7 @@ class Router
      * Setter for configuration object.
      *
      * @param  \Sonno\Configuration\Configuration $config
-     * @return \Sonno\Configuration\AnnotationDriver Implements fluent
+     * @return \Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setConfig(Configuration $config)
@@ -81,14 +81,19 @@ class Router
     /**
      * Find candidate routes for an incoming request.
      *
-     * @param Sonno\Http\Request\RequestInterface $request The incoming request
-     * @param array $pathParameters The set of Path parameters matched on the
-     *                              incoming Request path.
+     * @param RequestInterface $request        The incoming request
+     * @param array            $pathParameters The set of Path parameters
+     *                                         matched on the incoming Request
+     *                                         path.
+     *
+     * @throws \Sonno\Http\Exception\MethodNotAllowedException
+     * @throws \Sonno\Http\Exception\NotFoundException
+     * @throws \InvalidArgumentException
+     * @throws \Sonno\Http\Exception\NotAcceptableException
+     *
      * @return array A collection of candidate Route objects.
-     * @throws InvalidArgumentException
-     * @throws Sonno\Http\Exception\NotFoundException
-     * @throws Sonno\Http\Exception\MethodNotAllowedException
-     * @todo   When filteringer candidate routes by matching the incoming
+     *
+     * @todo   When filtering candidate routes by matching the incoming
      *         media type, Sonno is ignoring any Content-Type parameters
      *         including the charset. This should be resolved, otherwise there
      *         will be unintended consequences while dealing with charsets and
@@ -116,6 +121,7 @@ class Router
         }
 
         // locate matching routes using the incoming request path
+        /** @var $route \Sonno\Configuration\Route */
         foreach ($allRoutes as $route) {
             $params = $this->_matchPath($requestPath, $route->getPath());
             if (false !== $params) {

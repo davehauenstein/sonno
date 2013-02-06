@@ -1,13 +1,13 @@
 <?php
 
 /**
- * @category Sonno
- * @package  Sonno\Http
- * @author   Dave Hauenstein <davehauenstein@gmail.com>
- * @author   Tharsan Bhuvanendran <me@tharsan.com>
- * @author     360i <sonno@360i.com>
- * @copyright  Copyright (c) 2011 360i LLC (http://360i.com)
- * @license    http://sonno.360i.com/LICENSE.txt New BSD License
+ * @category  Sonno
+ * @package   Sonno\Http
+ * @author    Dave Hauenstein <davehauenstein@gmail.com>
+ * @author    Tharsan Bhuvanendran <me@tharsan.com>
+ * @author    360i <sonno@360i.com>
+ * @copyright Copyright (c) 2011 360i LLC (http://360i.com)
+ * @license   http://sonno.360i.com/LICENSE.txt New BSD License
  */
 
 namespace Sonno\Http;
@@ -46,9 +46,9 @@ class Variant
     /**
      * Create a new instance of Variant.
      *
-     * @param encoding  The content encoding of the variant - may be null.
-     * @param language  The language of the variant - may be null.
-     * @param mediaType The media type of the variant - may be null.
+     * @param null|string $encoding  The content encoding of the variant.
+     * @param null|string $language  The language of the variant.
+     * @param null|string $mediaType The media type of the variant.
      */
     public function __construct(
         $encoding  = null,
@@ -91,6 +91,11 @@ class Variant
         return $this->_mediaType;
     }
 
+    /**
+     * Calculate a unique identifier using the three properties of this variant.
+     *
+     * @return string
+     */
     public function getFingerprint()
     {
         return sha1($this->_encoding . $this->_language . $this->_mediaType);

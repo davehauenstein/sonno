@@ -25,7 +25,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
      * Test that when match() fails to locate a resource class to dispatch to,
      * it throws a NotFoundException.
      *
-     * @expectedException Sonno\Http\Exception\NotFoundException
+     * @expectedException \Sonno\Http\Exception\NotFoundException
      */
     public function testThrowsNotFoundWhenNoMatch()
     {
@@ -48,7 +48,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
      * Test that when the resource located by match() doesn't support the
      * incoming request method, it throws a MethodNotAllowed exception.
      *
-     * @expectedException Sonno\Http\Exception\MethodNotAllowedException
+     * @expectedException \Sonno\Http\Exception\MethodNotAllowedException
      */
     public function testThrowsMethodNotAllowedWhenNoMethodMatch()
     {
@@ -85,7 +85,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
      * representation of the type desired by the incoming request,
      * it throws a NotAcceptableException exception.
      *
-     * @expectedException Sonno\Http\Exception\NotAcceptableException
+     * @expectedException \Sonno\Http\Exception\NotAcceptableException
      */
     public function testThrowsNotAcceptableExceptionWhenResourceCannotProduceRepresentation()
     {
@@ -337,7 +337,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
      * regular expression.
      *
      * @return void
-     * @expectedException Sonno\Http\Exception\NotFoundException
+     * @expectedException \Sonno\Http\Exception\NotFoundException
      */
     public function testFailedPathMatchWithConstrainedParameters()
     {
@@ -363,7 +363,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
 
         $router = new Router($config);
 
-        $matches = $router->match($request, $params);
+        $router->match($request, $params);
     }
 
     /**

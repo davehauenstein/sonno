@@ -36,7 +36,7 @@ class UriBuilder
     protected $_queryParams;
 
     /**
-     * @var Sonno\Configuration\Configuration
+     * @var \Sonno\Configuration\Configuration
      */
     protected $_config;
 
@@ -81,7 +81,7 @@ class UriBuilder
      * @param string $scheme the URI scheme, may contain URI template
      *                       parameters.
      *                       A null value will unset the URI scheme
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function scheme($scheme)
     {
@@ -99,7 +99,7 @@ class UriBuilder
      *
      * @param string $host the URI host, may contain URI template parameters.
      *                     A null value will unset the host component of the URI
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function host($host)
     {
@@ -116,7 +116,7 @@ class UriBuilder
      * Set the URI port.
      *
      * @param int $port the URI port, a value of -1 will unset an explicit port
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function port($port)
     {
@@ -133,7 +133,7 @@ class UriBuilder
      * Append path to the existing path.
      *
      * @param string $path the path, may contain URI template parameters
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function path($path)
     {
@@ -159,11 +159,10 @@ class UriBuilder
      * Append the path from a Path-annotated class and/or method to the
      * existing path.
      *
-     * @param string $resourceClassName The FQNS and class name of the
-     *                                  Path-annotated class
+     * @param string $resourceClassName  The FQNS and class name of the
+     *                                    Path-annotated class
      * @param string $resourceMethodName The name of the Path-annotated method
-     * @return Sonno\Uri\UriBuilder
-     * @todo Implement this
+     * @return \Sonno\Uri\UriBuilder
      */
     public function resourcePath(
         $resourceClassName,
@@ -171,6 +170,7 @@ class UriBuilder
     {
         $foundClass = false;
 
+        /** @var $route \Sonno\Configuration\Route */
         foreach ($this->_config->getRoutes() as $route) {
             if ($resourceClassName == $route->getResourceClassName()) {
                 if (!$foundClass) {
@@ -196,7 +196,7 @@ class UriBuilder
      *
      * @param string $path the path, may contain URI template parameters.
      *                     A null value will unset the path component of the URI
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function replacePath($path)
     {
@@ -216,7 +216,7 @@ class UriBuilder
      *                    parameters
      * @param string $value the query parameter value, may contain URI template
      *                      parameters
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function queryParam($key, $value)
     {
@@ -231,7 +231,7 @@ class UriBuilder
      * @param string $query the URI query string, may contain URI template
      *                      parameters. A null value will remove all query
      *                      parameters
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function replaceQuery($query)
     {
@@ -250,7 +250,7 @@ class UriBuilder
      * @param string $fragment the URI fragment, may contain URI template
      *                         parameters. A null value will remove any existing
      *                         fragment. 
-     * @return Sonno\Uri\UriBuilder
+     * @return \Sonno\Uri\UriBuilder
      */
     public function fragment($fragment)
     {
@@ -269,8 +269,8 @@ class UriBuilder
      *
      * @param array $values An ordered array of URI template parameter values.
      * @return string
-     * @throws LengthException if there are any URI template parameters without
-     *                         a supplied value
+     * @throws \LengthException if there are any URI template parameters without
+     *                          a supplied value
      */
     public function build(array $values = array())
     {
@@ -308,7 +308,7 @@ class UriBuilder
         $uri = $this->_concatUriComponents();
 
         foreach ($values as $varName => $varValue) {
-            if (is_string($varValue)) {
+            if (is_scalar($varValue)) {
                 $uri = str_replace("{{$varName}}", $varValue, $uri);
             }
         }
@@ -323,8 +323,10 @@ class UriBuilder
      */
     protected function _concatUriComponents()
     {
+        $uri = '';
+
         if (isset($this->_uriComponents['scheme'])) {
-            $uri = $this->_uriComponents['scheme'] . '://';
+            $uri .= $this->_uriComponents['scheme'] . '://';
         }
 
         if (isset($this->_uriComponents['host'])) {

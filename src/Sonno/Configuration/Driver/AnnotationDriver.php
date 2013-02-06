@@ -41,14 +41,14 @@ class AnnotationDriver implements DriverInterface
     /**
      * A local instance of a Configuration object.
      *
-     * @var Sonno\Configuration\Configuration
+     * @var \Sonno\Configuration\Configuration
      */
     protected $_config;
 
     /**
      * A local instance of an Annotation Reader object.
      *
-     * @var Sonno\Annotation\Reader\ReaderInterface
+     * @var \Sonno\Annotation\Reader\ReaderInterface
      */
     protected $_reader;
 
@@ -64,7 +64,7 @@ class AnnotationDriver implements DriverInterface
      * Construct a new AnnotationDriver object.
      *
      * @param  array $classes List of classes that are annotated as Resources.
-     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
+     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
      */
     public function __construct(array $classes, ReaderInterface $reader = null)
     {
@@ -75,8 +75,8 @@ class AnnotationDriver implements DriverInterface
     /**
      * Setter for configuration object.
      *
-     * @param  Sonno\Configuration\Configuration $config
-     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
+     * @param  \Sonno\Configuration\Configuration $config
+     * @return \Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setConfig(Configuration $config)
@@ -88,7 +88,7 @@ class AnnotationDriver implements DriverInterface
     /**
      * Getter for configuration object.
      *
-     * @return Sonno\Configuration\Configuration
+     * @return \Sonno\Configuration\Configuration
      */
     public function getConfig()
     {
@@ -101,8 +101,8 @@ class AnnotationDriver implements DriverInterface
     /**
      * Setter for annotation reader object.
      *
-     * @param  Sonno\Annotation\Reader\ReaderInterface $reader
-     * @return Sonno\Configuration\Driver\AnnotationDriver Implements fluent
+     * @param  \Sonno\Annotation\Reader\ReaderInterface $reader
+     * @return \Sonno\Configuration\Driver\AnnotationDriver Implements fluent
      *         interface.
      */
     public function setReader(ReaderInterface $reader)
@@ -114,7 +114,7 @@ class AnnotationDriver implements DriverInterface
     /**
      * Getter for annotation reader object.
      *
-     * @return Sonno\Annotation\Reader\ReaderInterface
+     * @return \Sonno\Annotation\Reader\ReaderInterface
      */
     public function getReader()
     {
@@ -126,7 +126,7 @@ class AnnotationDriver implements DriverInterface
      *
      * @param  $classes array An array of fully qualified class names which are
      *         annotated with Sonno annotations.
-     * @return Sonno\Configuration\Driver\AnnotationDriver Implements a
+     * @return \Sonno\Configuration\Driver\AnnotationDriver Implements a
      *         fluent interface.
      */
     public function setAnnotatedResources(array $classes)
@@ -152,8 +152,8 @@ class AnnotationDriver implements DriverInterface
      * (YAML, XML, Annotations, etc..). It must return a 
      * {@link Sonno\Configuration\Configuration Configuration} instance.
      *
-     * @return Sonno\Configuration\Configuration
-     * @throws Sonno\Configuration\Driver\DriverException If no annotation
+     * @return \Sonno\Configuration\Configuration
+     * @throws \Sonno\Configuration\Driver\DriverException If no annotation
      *         reader object is set.
      * @see    Sonno\Configuration\Driver\DriverInterface
      */

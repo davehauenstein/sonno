@@ -11,7 +11,8 @@ namespace Sonno\Test\Application\Asset;
 
 require_once __DIR__ . '/Polo.php';
 
-use Sonno\Http\Response\Response;
+use Sonno\Http\Response\Response,
+    Sonno\Application\WebApplicationException;
 
 /**
  * @category Sonno
@@ -54,7 +55,7 @@ class TestResource
         return new Polo($colour);
     }
 
-    public function causeError()
+    public function causeUnexpectedError()
     {
         throw new \Sonno\Http\Exception\MethodNotAllowedException;
     }
@@ -63,5 +64,10 @@ class TestResource
     {
         $entity = '<polo><color>' . strtolower($polo->getColour()) . '</color></polo>';
         return new Response(201, $entity, array('Content-Type' => 'application/xml'));
+    }
+
+    public function causeAppError()
+    {
+        return new WebApplicationException(404, '<p>Entity not found!</p>');
     }
 }
