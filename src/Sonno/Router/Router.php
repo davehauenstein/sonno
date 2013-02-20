@@ -21,7 +21,7 @@ use Sonno\Http\Request\RequestInterface,
 
 /**
  * Responsible for determing which route will satisfy an incoming HTTP request,
- * the Router examines the routes in a PhRest\Configuration\Configuration object
+ * the Router examines the routes in a Sonno\Configuration\Configuration object
  * and delivers a subset of those routes by comparing to request path, request
  * method and request content type.
  *
