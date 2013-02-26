@@ -1,5 +1,5 @@
 {
-    "hash": "33c10bcf98cda82c1bfc91273273df75",
+    "hash": "1cb65bfb297b7e60d9c64c8bffe0aab8",
     "packages": [
         {
             "name": "doctrine/common",
@@ -18,7 +18,6 @@
             "require": {
                 "php": ">=5.3.2"
             },
-            "time": "2012-03-03 13:05:52",
             "type": "library",
             "autoload": {
                 "psr-0": {
@@ -58,12 +57,13 @@
             "description": "Common Library for Doctrine projects",
             "homepage": "http://www.doctrine-project.org",
             "keywords": [
-                "collections",
-                "spl",
-                "eventmanager",
                 "annotations",
-                "persistence"
-            ]
+                "collections",
+                "eventmanager",
+                "persistence",
+                "spl"
+            ],
+            "time": "2012-03-03 13:05:52"
         },
         {
             "name": "monolog/monolog",
@@ -86,11 +86,10 @@
                 "mlehner/gelf-php": "1.0.*"
             },
             "suggest": {
-                "mlehner/gelf-php": "Allow sending log messages to a GrayLog2 server",
                 "ext-amqp": "Allow sending log messages to an AMQP server (1.0+ required)",
-                "ext-mongo": "Allow sending log messages to a MongoDB server"
+                "ext-mongo": "Allow sending log messages to a MongoDB server",
+                "mlehner/gelf-php": "Allow sending log messages to a GrayLog2 server"
             },
-            "time": "2012-08-29 04:53:20",
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -119,7 +118,8 @@
             "keywords": [
                 "log",
                 "logging"
-            ]
+            ],
+            "time": "2012-08-29 04:53:20"
         }
     ],
     "packages-dev": null,

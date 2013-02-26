@@ -177,6 +177,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * cannot be located to service the request.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testNotFound()
     {
@@ -194,6 +195,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * request path matches a resource method, but not the HTTP method.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testUnsupportedMethod()
     {
@@ -214,6 +216,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * resource cannot produce a representation of the type requested.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testNotAcceptable()
     {
@@ -236,6 +239,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * Test that the base URI is correctly considered when fulfilling a request.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testBaseUri()
     {
@@ -292,6 +296,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * thrown, the Exception's constructor argument is used as the Response entity.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testWebApplicationExceptionContentEntity()
     {
@@ -332,6 +337,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * processes the result of a resource method that returns a Response object.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testResponseReturnedByResource()
     {
@@ -365,6 +371,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * Renderable.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testRenderableReturnedByResource()
     {
@@ -399,6 +406,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * processes the result of a resource method that returns a scalar value.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testScalarReturnedByResource()
     {
@@ -434,6 +442,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * executed.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testResponseFilterCallback()
     {
@@ -474,6 +483,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * callback and ensure that it is not executed.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testUnregisterSpecificFilterCallback()
     {
@@ -517,6 +527,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
      * for a specific status code, and ensure that they are not executed.
      *
      * @return void
+     * @runInSeparateProcess
      */
     public function testUnregisterAllFilterCallbacks()
     {

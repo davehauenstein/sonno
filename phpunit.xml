@@ -1,4 +1,4 @@
-<phpunit bootstrap="./bootstrap.php"
+<phpunit bootstrap="./tests/bootstrap.php"
          colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
@@ -12,15 +12,15 @@
          verbose="false">
     <testsuites>
         <testsuite name="Sonno Test Suite">
-            <directory>./Sonno</directory>
+            <directory>./tests/Sonno</directory>
         </testsuite>
     </testsuites>
     <filter>
         <whitelist>
-            <directory suffix=".php">../src</directory>
+            <directory suffix=".php">./src</directory>
         </whitelist>
     </filter>
     <logging>
-        <log type="coverage-html" target="./log/report" charset="UTF-8" yui="true" highlight="true" />
+        <log type="coverage-html" target="./tests/log/report" charset="UTF-8" yui="true" highlight="true" />
     </logging>
 </phpunit>
