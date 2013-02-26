@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/360i/sonno.png)](https://travis-ci.org/360i/sonno)
+
 Sonno - A RESTful PHP Framework!
 ================================
 
